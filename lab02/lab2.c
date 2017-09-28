@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
+typedef struct _intfloat {
+    int exponent;
+    int fraction;
+} INTFLOAT, *INTFLOAT_PTR;
+
 /* umultiply: multiplies two 16-bit unsigned nubmers and returns a 32-bit unsigned number */
 unsigned int umultiply(unsigned int a, unsigned int b) {
     unsigned int prod  = 0;
@@ -20,6 +25,15 @@ unsigned int umultiply(unsigned int a, unsigned int b) {
     return prod;
 }
 
+void extract_float(INTFLOAT_PTR x, float f) {
+    unsigned int vect = (unsigned int)*((unsigned int *)&f);
+    unsigned int sign = vect >> 31;
+    unsigned int exp  = (vect >> 23) & 0xff;
+    unsigned int frac = vect & 0x7fffff;
+
+    printf("%f %x: %u %u %u\n", f, vect, sign, exp, frac);
+}
+
 /* part1: prints out formatted output for part 1 */
 void part1(void) {
     printf("=========Part 1==========\n");
@@ -34,14 +48,24 @@ void part1(void) {
 /* part2: prints out formatted output for part 2 */
 void part2(void) {
     printf("=========Part 2==========\n");
-
+    printf("2a. Test case: 0x40C80000\n");
+    printf("2b. Test case: 0xc3000000\n");
+    printf("2c. Test case: 0x3e000000\n");
+    printf("2d. Test case: 0x3EAAAAAB\n");
     printf("=========================\n\n");
 }
 
 /* part3: prints out formatted output for part 3 */
 void part3(void) {
     printf("=========Part 3==========\n");
-
+    printf("3a. Test case: 0x40c80000\n");
+    printf("  Float:\n");
+    printf("3b. Test case: 0xC3000000\n");
+    printf("  Float:\n");
+    printf("3c. Test case: 0x3E000000\n");
+    printf("  Float:\n");
+    printf("3d. Test case: 0x3EAAAAAB\n");
+    printf("  Float:\n");
     printf("=========================\n\n");
 }
 
@@ -68,7 +92,7 @@ void part6(void) {
 
 /* part7: prints out formatted output for part 7 */
 void part7(void) {
-    printf("=========Part 7==========\n"); 
+    printf("=========Part 7==========\n");
 
     printf("=========================\n\n");
 }
@@ -81,6 +105,8 @@ int main(void) {
     part5();
     part6();
     part7();
+
+    extract_float(NULL, 123.277);
 
     return 0;
 }
