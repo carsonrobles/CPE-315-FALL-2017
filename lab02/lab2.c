@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
+typedef struct {
+    int exponent;
+    int fraction;
+} INTFLOAT, *INTFLOAT_PTR;
+
 unsigned int umultiply(unsigned int a, unsigned int b) {
     unsigned int prod;
 
