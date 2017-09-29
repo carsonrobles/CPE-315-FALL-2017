@@ -38,9 +38,16 @@ void part1(void) {
 
 void extract_float(INTFLOAT_PTR x, float f) {
     unsigned int vect = (unsigned int)*((unsigned int *)&f);
-    unsigned int sign = vect >> 31;                         // sign bit is MSB
-    unsigned int exp  = ((vect >> 23) & 0xff) - 127;        // extract exp field and subtract bias
-    unsigned int frac = (vect & 0x7fffff) | (1 << 23);      // extract remaining
+    unsigned int sign = vect >> 31;
+    unsigned int exp  = ((vect >> 23) & 0xff);
+    unsigned int frac = (vect & 0x7fffff);
+
+    // remove bias
+    exp  -= 127;
+
+    // set hidden 1 and correct exponent for this
+    frac |= (1 << 23);
+    exp  += 1;
 
     if (sign)
         frac = ~frac + 1;
@@ -87,10 +94,19 @@ float packfloat(INTFLOAT_PTR ifp) {
         frac = ~frac + 1;
     }
 
+    // get sign bit in position
     sign <<= 31;
-    frac &= ~(1 << 23);
-    exp   = (exp + 127) << 23;
 
+    // clear the hidden 1
+    frac &= ~(1 << 23);
+
+    // remove bias and correct for no hidden 1
+    exp  += 127 - 1;
+
+    // position exponent
+    exp <<= 23;
+
+    // piece the float together
     vect = sign | exp | frac;
 
     return (float)*((float *)&vect);
