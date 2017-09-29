@@ -25,6 +25,17 @@ unsigned int umultiply(unsigned int a, unsigned int b) {
     return prod;
 }
 
+/* part1: prints out formatted output for part 1 */
+void part1(void) {
+    printf("=========Part 1==========\n");
+    printf("1a. a=0x0001, b=0x0001 c=0x%08x\n", umultiply(0x0001, 0x0001));
+    printf("1b. a=0x0001, b=0xFFFF c=0x%08x\n", umultiply(0x0001, 0xffff));
+    printf("1c. a=0x8000, b=0x0001 c=0x%08x\n", umultiply(0x8000, 0x0001));
+    printf("1d. a=0x4000, b=0x4000 c=0x%08x\n", umultiply(0x4000, 0x4000));
+    printf("1e. a=0x8000, b=0x8000 c=0x%08x\n", umultiply(0x8000, 0x8000));
+    printf("=========================\n\n");
+}
+
 void extract_float(INTFLOAT_PTR x, float f) {
     unsigned int vect = (unsigned int)*((unsigned int *)&f);
     unsigned int sign = vect >> 31;                         // sign bit is MSB
@@ -36,17 +47,6 @@ void extract_float(INTFLOAT_PTR x, float f) {
 
     x->exponent = (int)exp;
     x->fraction = (int)frac;
-}
-
-/* part1: prints out formatted output for part 1 */
-void part1(void) {
-    printf("=========Part 1==========\n");
-    printf("1a. a=0x0001, b=0x0001 c=0x%08x\n", umultiply(0x0001, 0x0001));
-    printf("1b. a=0x0001, b=0xFFFF c=0x%08x\n", umultiply(0x0001, 0xffff));
-    printf("1c. a=0x8000, b=0x0001 c=0x%08x\n", umultiply(0x8000, 0x0001));
-    printf("1d. a=0x4000, b=0x4000 c=0x%08x\n", umultiply(0x4000, 0x4000));
-    printf("1e. a=0x8000, b=0x8000 c=0x%08x\n", umultiply(0x8000, 0x8000));
-    printf("=========================\n\n");
 }
 
 void part2printwrap(const char *pref, unsigned int v) {
@@ -65,7 +65,6 @@ void part2printwrap(const char *pref, unsigned int v) {
 
 /* part2: prints out formatted output for part 2 */
 void part2(void) {
-
     printf("=========Part 2==========\n");
 
     part2printwrap("2a.", 0x40C80000);
@@ -76,17 +75,47 @@ void part2(void) {
     printf("=========================\n\n");
 }
 
+float packfloat(INTFLOAT_PTR ifp) {
+    unsigned int vect = 0;
+
+    unsigned int sign = 0;
+    unsigned int exp  = (unsigned int)*((unsigned int *)&ifp->exponent);
+    unsigned int frac = (unsigned int)*((unsigned int *)&ifp->fraction);
+
+    if (ifp->fraction < 0) {
+        sign = 1;
+        frac = ~frac + 1;
+    }
+
+    sign <<= 31;
+    frac &= ~(1 << 23);
+    exp   = (exp + 127) << 23;
+
+    vect = sign | exp | frac;
+
+    return (float)*((float *)&vect);
+}
+
+void part3printwrap(const char *pref, unsigned int v) {
+    float f = (float)*((float *)&v);
+
+    INTFLOAT intfloat;
+
+    extract_float(&intfloat, f);
+
+    printf("%s Test case: 0x%08x\n", pref, v);
+    printf("  Float: %f\n", packfloat(&intfloat));
+}
+
 /* part3: prints out formatted output for part 3 */
 void part3(void) {
     printf("=========Part 3==========\n");
-    printf("3a. Test case: 0x40c80000\n");
-    printf("  Float:\n");
-    printf("3b. Test case: 0xC3000000\n");
-    printf("  Float:\n");
-    printf("3c. Test case: 0x3E000000\n");
-    printf("  Float:\n");
-    printf("3d. Test case: 0x3EAAAAAB\n");
-    printf("  Float:\n");
+
+    part3printwrap("3a.", 0x40c80000);
+    part3printwrap("3b.", 0xC3000000);
+    part3printwrap("3c.", 0x3E000000);
+    part3printwrap("3d.", 0x3EAAAAAB);
+
     printf("=========================\n\n");
 }
 
