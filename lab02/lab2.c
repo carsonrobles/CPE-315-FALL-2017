@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <math.h>
 
 typedef struct _intfloat {
     int exponent;
@@ -27,11 +27,15 @@ unsigned int umultiply(unsigned int a, unsigned int b) {
 
 void extract_float(INTFLOAT_PTR x, float f) {
     unsigned int vect = (unsigned int)*((unsigned int *)&f);
-    unsigned int sign = vect >> 31;
-    unsigned int exp  = (vect >> 23) & 0xff;
-    unsigned int frac = vect & 0x7fffff;
+    unsigned int sign = vect >> 31;                         // sign bit is MSB
+    unsigned int exp  = ((vect >> 23) & 0xff) - 127;        // extract exp field and subtract bias
+    unsigned int frac = (vect & 0x7fffff) | (1 << 23);      // extract remaining
 
-    printf("%f %x: %u %u %u\n", f, vect, sign, exp, frac);
+    if (sign)
+        frac = ~frac + 1;
+
+    x->exponent = (int)exp;
+    x->fraction = (int)frac;
 }
 
 /* part1: prints out formatted output for part 1 */
@@ -45,13 +49,30 @@ void part1(void) {
     printf("=========================\n\n");
 }
 
+void part2printwrap(const char *pref, unsigned int v) {
+    float f = (float)*((float *)&v);
+
+    INTFLOAT intfloat;
+
+    extract_float(&intfloat, f);
+
+    printf("%s Test case: 0x%x\n", pref, v);
+
+    printf("  Float: %f\n", f);
+    printf("  Exponent: %d\n", intfloat.exponent);
+    printf("  Fraction: 0x%08x\n", intfloat.fraction);
+}
+
 /* part2: prints out formatted output for part 2 */
 void part2(void) {
+
     printf("=========Part 2==========\n");
-    printf("2a. Test case: 0x40C80000\n");
-    printf("2b. Test case: 0xc3000000\n");
-    printf("2c. Test case: 0x3e000000\n");
-    printf("2d. Test case: 0x3EAAAAAB\n");
+
+    part2printwrap("2a.", 0x40C80000);
+    part2printwrap("2b.", 0xc3000000);
+    part2printwrap("2c.", 0x3e000000);
+    part2printwrap("2d.", 0x3eaaaaab);
+
     printf("=========================\n\n");
 }
 
@@ -105,8 +126,6 @@ int main(void) {
     part5();
     part6();
     part7();
-
-    extract_float(NULL, 123.277);
 
     return 0;
 }
