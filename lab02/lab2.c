@@ -220,7 +220,7 @@ float fsub(float a, float b) {
 
     diff = frac_a - frac_b;
 
-
+    
 }
 
 /* part6: prints out formatted output for part 6 */
