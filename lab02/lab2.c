@@ -59,7 +59,7 @@ void extract_float(INTFLOAT_PTR x, float f) {
         frac = ~frac + 1;
 
     x->exponent = (int)exp;
-    x->fraction = (int)frac;
+    x->fraction = (int)(frac << 7);
 }
 
 void part2printwrap(const char *pref, unsigned int v) {
@@ -99,6 +99,8 @@ float packfloat(INTFLOAT_PTR ifp) {
         sign = 1;
         frac = ~frac + 1;
     }
+
+    frac >>= 7;
 
     // get sign bit in position
     sign <<= 31;
@@ -141,6 +143,7 @@ void part3(void) {
     printf("=========================\n\n");
 }
 
+/* normalize: normalizes the provided float int structure */
 void normalize(INTFLOAT_PTR x) {
     unsigned int cond = 0, sign = 0;
 
@@ -189,6 +192,16 @@ void part4(void) {
     printf("=========================\n\n");
 }
 
+void arithrightshift(int *vect, int n) {
+    char sign = *vect | (1 << 31);
+
+    while (n-- > 0) {
+        *vect >>= 1;
+
+        if (sign) *vect |= (1 << 31);
+    }
+}
+
 /* fadd: adds two single precision floating point values */
 float fadd(float a, float b) {
     INTFLOAT a_str;
@@ -212,20 +225,34 @@ float fadd(float a, float b) {
 
     /* align smaller number with the larger */
     for (i = 0; i < dif; i++) {
-        shift->fraction >>= 1;
-        shift->exponent  += 1;
+        arithrightshift(&shift->fraction, 1);
+
+        shift->exponent += 1;
     }
 
-    a_str.fraction >>= 1;
-    a_str.exponent  += 1;
-    b_str.fraction >>= 1;
-    b_str.exponent  += 1;
+    arithrightshift(&a_str.fraction, 1);
+    arithrightshift(&b_str.fraction, 1);
+
+    a_str.exponent += 1;
+    b_str.exponent += 1;
 
     shift->fraction = a_str.fraction + b_str.fraction;
 
     normalize(shift);
 
     return (packfloat(shift));
+}
+
+void part5printwrap(const char *pref, unsigned int v1, unsigned int v2) {
+    char cs1 = (v1 & (1 << 31)) ? 0 : '+';
+    char cs2 = (v2 & (1 << 31)) ? 0 : '+';
+
+    float f1  = (float)*((float *)&v1);
+    float f2  = (float)*((float *)&v2);
+    float sum = fadd(f1, f2);
+
+    printf("%s 0x%08X and 0x%08X (%c%f and %c%f)\n", pref, v1, v2, cs1, f1, cs2, f2);
+    printf("  Sum:0x%08X (%f Decimal Value)\n", (unsigned int)*((unsigned int *)&sum), sum);
 }
 
 /* part5: prints out formatted output for part 5 */
@@ -236,6 +263,8 @@ void part5(void) {
     float b = 32.334;
 
     printf("%f + %f = %f\n", a, b, fadd(a, b));
+
+    part5printwrap("5a.", 0xBF800000, 0x3F800000);
 
     printf("=========================\n\n");
 }
