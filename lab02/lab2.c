@@ -62,26 +62,6 @@ void extract_float(INTFLOAT_PTR x, float f) {
     x->fraction = (int)frac;
 }
 
-void normalize(INTFLOAT_PTR x) {
-    unsigned int cond = 0, sign = 0;
-
-    if (x->fraction == 0) {
-        return;
-    }
-
-    sign = x->fraction >> 31;
-
-    while ((cond = x->fraction & 0xc0000000) == 0xc0000000 ||\
-            cond == 0x00000000) {
-        x->fraction <<= 1;
-        x->exponent--;
-    }
-
-    if (sign) {
-        x->fraction |= 0x80000000;
-    }
-}
-
 void part2printwrap(const char *pref, unsigned int v) {
     float f = (float)*((float *)&v);
 
@@ -159,6 +139,26 @@ void part3(void) {
     part3printwrap("3d.", 0x3EAAAAAB);
 
     printf("=========================\n\n");
+}
+
+void normalize(INTFLOAT_PTR x) {
+    unsigned int cond = 0, sign = 0;
+
+    if (x->fraction == 0) {
+        return;
+    }
+
+    sign = x->fraction >> 31;
+
+    while ((cond = x->fraction & 0xc0000000) == 0xc0000000 ||\
+            cond == 0x00000000) {
+        x->fraction <<= 1;
+        x->exponent--;
+    }
+
+    if (sign) {
+        x->fraction |= 0x80000000;
+    }
 }
 
 /* part4: prints out formatted output for part 4 */
