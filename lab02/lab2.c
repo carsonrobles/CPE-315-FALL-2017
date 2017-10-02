@@ -191,9 +191,36 @@ void part4(void) {
 
 /* part5: prints out formatted output for part 5 */
 void part5(void) {
+    float a = 0, b = 0;
     printf("=========Part 5==========\n");
-
+    a = (float) 0xbf800000;
+    b = (float) 0x3f800000;
+    fadd(a, b);
+    printf("5a. 0x%x and 0x%x (%f and %f)\n", (unsigned int) a,\
+            (unsigned int) b, a, b);
     printf("=========================\n\n");
+}
+
+float fsub(float a, float b) {
+    unsigned int exp_a = ((unsigned int) a) & 0x7f800000;
+    unsigned int exp_b = ((unsigned int) b) & 0x7f800000;
+    unsigned int frac_a = ((unsigned int) a) & 0x003fffff;
+    unsigned int frac_b = ((unsigned int) b) & 0x003fffff;
+    unsigned int diff = 0;
+
+    while (exp_a != exp_b) {
+        if (exp_a < exp_b) {
+            frac_a >>= 1;
+            exp_a++;
+        } else {
+            frac_b >>= 1;
+            exp_b++;
+        }
+    }
+
+    diff = frac_a - frac_b;
+
+
 }
 
 /* part6: prints out formatted output for part 6 */
