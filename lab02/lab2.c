@@ -189,9 +189,54 @@ void part4(void) {
     printf("=========================\n\n");
 }
 
+/* fadd: adds two single precision floating point values */
+float fadd(float a, float b) {
+    INTFLOAT a_str;
+    INTFLOAT b_str;
+
+    INTFLOAT_PTR shift = NULL;
+
+    int dif;
+    int i;
+
+    extract_float(&a_str, a);
+    extract_float(&b_str, b);
+
+    /* find number with most negative exponent */
+    if ((dif = a_str.exponent - b_str.exponent) < 0) {
+        dif   = -1 * dif;
+        shift = &a_str;
+    } else {
+        shift = &b_str;
+    }
+
+    /* align smaller number with the larger */
+    for (i = 0; i < dif; i++) {
+        shift->fraction >>= 1;
+        shift->exponent  += 1;
+    }
+
+    a_str.fraction >>= 1;
+    a_str.exponent  += 1;
+    b_str.fraction >>= 1;
+    b_str.exponent  += 1;
+
+    shift->fraction = a_str.fraction + b_str.fraction;
+
+    /* TODO: normalize result */
+    
+
+    return (packfloat(shift));
+}
+
 /* part5: prints out formatted output for part 5 */
 void part5(void) {
     printf("=========Part 5==========\n");
+
+    float a = 10.2;
+    float b = 32.334;
+
+    printf("%f + %f = %f\n", a, b, fadd(a, b));
 
     printf("=========================\n\n");
 }
