@@ -44,22 +44,20 @@ void part1(void) {
 
 void extract_float(INTFLOAT_PTR x, float f) {
     unsigned int vect = (unsigned int)*((unsigned int *)&f);
-    unsigned int sign = vect >> 31;
+    unsigned int sign = vect & 0x80000000;
     unsigned int exp  = ((vect >> 23) & 0xff);
-    unsigned int frac = (vect & 0x7fffff);
+    unsigned int frac = (vect & 0x007fffff);
 
     // remove bias
     exp  -= 127;
 
-    // set hidden 1 and correct exponent for this
-    frac |= (1 << 23);
-    exp  += 1;
-
     if (sign)
-        frac = ~frac + 1;
+        frac |= 0x00800000;
+
+    frac <<= 8;
 
     x->exponent = (int)exp;
-    x->fraction = (int)(frac << 7);
+    x->fraction = frac;
 }
 
 void part2printwrap(const char *pref, unsigned int v) {
@@ -95,26 +93,17 @@ float packfloat(INTFLOAT_PTR ifp) {
     unsigned int exp  = (unsigned int)*((unsigned int *)&ifp->exponent);
     unsigned int frac = (unsigned int)*((unsigned int *)&ifp->fraction);
 
-    if (!(exp | frac)) return 0;
+    exp += 127;
+    exp <<= 23;
 
-    if (ifp->fraction < 0) {
-        sign = 1;
-        frac = ~frac + 1;
+    if ((frac & 0x80000000) == 0x80000000) {
+        sign = 0x80000000;
     }
 
-    frac >>= 7;
+    frac >>= 8;
+    frac &= 0x007fffff;
 
-    // get sign bit in position
-    sign <<= 31;
-
-    // clear the hidden 1
-    frac &= ~(1 << 23);
-
-    // remove bias and correct for no hidden 1
-    exp  += 127 - 1;
-
-    // position exponent
-    exp <<= 23;
+    if (!(exp | frac)) return 0;
 
     // piece the float together
     vect = sign | exp | frac;
@@ -153,7 +142,7 @@ void normalize(INTFLOAT_PTR x) {
         return;
     }
 
-    sign = x->fraction >> 31;
+    sign = x->fraction >> 23;
 
     while ((cond = x->fraction & 0xc0000000) == 0xc0000000 ||\
             cond == 0x00000000) {
@@ -328,9 +317,9 @@ void part6printwrap(const char *pref, unsigned int v1, unsigned int v2) {
 
     printf("%s 0x%08X and 0x%08X (%c%f - ", pref, v1, v2, cs1, f1);
     if (f2 >= 0) {
-        printf("%c%f)", cs2, f2);
+        printf("%c%f)\n", cs2, f2);
     } else {
-        printf("(%c%f))", cs2, f2);
+        printf("(%c%f))\n", cs2, f2);
     }
     printf("  Sum:0x%08X (%f Decimal Value)\n", (unsigned int)*((unsigned int *)&sum), sum);
 }
@@ -354,20 +343,30 @@ float fmul(float a, float b) {
     int a_32 = a_str.fraction >> 7;
     int b_32 = b_str.fraction >> 7;
 
+    int a_frac = (a_str.fraction << 1) >> 24;
+    int b_frac = b_str.fraction << 1;
+
     long int res = a_32 * b_32;
     int exp = a_str.exponent + b_str.exponent;
 
     char sign = (a_32 >> 31) ^ (b_32 >> 31);
 
-    while ((sign && !(res & ~(1 << 30))) || (!sign && (res & ~(1 << 30)))) {
-        res <<= 1;
-        res |= sign << 31;
+    a_str.exponent += b_str.exponent;
+
+    printf("a_frac = %x, b_frac = %x\n", a_frac, b_frac);
+    a_frac = a_frac * b_frac;
+    a_frac >>= 1;
+    a_str.fraction = a_frac & 0x7f800000;
+
+    if ((a_str.fraction & 0x80000000) == (a_str.fraction & 0x80000000)) {
+        a_str.fraction |= 0x80000000;
+    } else {
+        a_str.fraction &= 0x80000000;
     }
 
-    a_str.fraction = res >> 31;
-    a_str.exponent = exp;
-
     normalize(&a_str);
+
+    printf("exponent = %x, fraction = %x\n", a_str.exponent, a_str.fraction);
 
     return (packfloat(&a_str));
 }
