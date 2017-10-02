@@ -194,6 +194,8 @@ void part4(void) {
 
 void arithrightshift(int *vect, int n) {
     char sign = *vect | (1 << 31);
+    
+    *vect &= 0xffbfffff;
 
     while (n-- > 0) {
         *vect >>= 1;
@@ -268,31 +270,52 @@ void part5(void) {
 }
 
 float fsub(float a, float b) {
-    unsigned int exp_a = ((unsigned int) a) & 0x7f800000;
-    unsigned int exp_b = ((unsigned int) b) & 0x7f800000;
-    unsigned int frac_a = ((unsigned int) a) & 0x003fffff;
-    unsigned int frac_b = ((unsigned int) b) & 0x003fffff;
-    unsigned int diff = 0;
+    INTFLOAT a_str;
+    INTFLOAT b_str;
 
-    while (exp_a != exp_b) {
-        if (exp_a < exp_b) {
-            frac_a >>= 1;
-            exp_a++;
-        } else {
-            frac_b >>= 1;
-            exp_b++;
-        }
+    INTFLOAT_PTR shift = NULL;
+
+    int dif;
+    int i;
+
+    extract_float(&a_str, a);
+    extract_float(&b_str, b);
+
+    /* find number with most negative exponent */
+    if ((dif = a_str.exponent - b_str.exponent) < 0) {
+        dif   = -1 * dif;
+        shift = &a_str;
+    } else {
+        shift = &b_str;
     }
 
-    diff = frac_a - frac_b;
+    /* align smaller number with the larger */
+    for (i = 0; i < dif; i++) {
+        arithrightshift(&shift->fraction, 1);
 
-    
+        shift->exponent += 1;
+    }
+
+    arithrightshift(&a_str.fraction, 1);
+    arithrightshift(&b_str.fraction, 1);
+
+    a_str.exponent += 1;
+    b_str.exponent += 1;
+
+    shift->fraction = a_str.fraction - b_str.fraction;
+
+    normalize(shift);
+
+    return (packfloat(shift));
 }
 
 /* part6: prints out formatted output for part 6 */
 void part6(void) {
     printf("=========Part 6==========\n");
-
+    float a = 0, b = 0;
+    part5printwrap("6a.", 0x40400000, 0x3f800000);
+    part5printwrap("6b.", 0x40400000, 0xbf800000);
+    part5printwrap("6c.", 0x40000000, 0x40000000);
     printf("=========================\n\n");
 }
 
