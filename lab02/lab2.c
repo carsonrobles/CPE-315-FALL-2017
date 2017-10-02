@@ -223,8 +223,7 @@ float fadd(float a, float b) {
 
     shift->fraction = a_str.fraction + b_str.fraction;
 
-    /* TODO: normalize result */
-    
+    normalize(shift);
 
     return (packfloat(shift));
 }
