@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <math.h>
 
 typedef struct _intfloat {
     int exponent;
@@ -31,22 +31,6 @@ unsigned int umultiply(unsigned int a, unsigned int b) {
     return prod;
 }
 
-void extract_float(INTFLOAT_PTR x, float f) {
-    unsigned int vect = (unsigned int)*((unsigned int *)&f);
-    unsigned int sign = vect >> 31;
-    unsigned int exp  = (vect >> 23) & 0xff;
-    unsigned int frac = vect & 0x7fffff;
-
-    printf("%f %x: %u %u %u\n", f, vect, sign, exp, frac);
-}
-
-void normalize(INTFLOAT_PTR x) {
-    unsigned int floatint = 0;
-    unsigned int sign = x->fraction >> 31;
-    unsigned int exp = x->exponent
-    unsigned int fraction = 
-}
-
 /* part1: prints out formatted output for part 1 */
 void part1(void) {
     printf("=========Part 1==========\n");
@@ -58,27 +42,102 @@ void part1(void) {
     printf("=========================\n\n");
 }
 
+void extract_float(INTFLOAT_PTR x, float f) {
+    unsigned int vect = (unsigned int)*((unsigned int *)&f);
+    unsigned int sign = vect >> 31;
+    unsigned int exp  = ((vect >> 23) & 0xff);
+    unsigned int frac = (vect & 0x7fffff);
+
+    // remove bias
+    exp  -= 127;
+
+    // set hidden 1 and correct exponent for this
+    frac |= (1 << 23);
+    exp  += 1;
+
+    if (sign)
+        frac = ~frac + 1;
+
+    x->exponent = (int)exp;
+    x->fraction = (int)frac;
+}
+
+void part2printwrap(const char *pref, unsigned int v) {
+    float f = (float)*((float *)&v);
+
+    INTFLOAT intfloat;
+
+    extract_float(&intfloat, f);
+
+    printf("%s Test case: 0x%x\n", pref, v);
+
+    printf("  Float: %f\n", f);
+    printf("  Exponent: %d\n", intfloat.exponent);
+    printf("  Fraction: 0x%08x\n", intfloat.fraction);
+}
+
 /* part2: prints out formatted output for part 2 */
 void part2(void) {
     printf("=========Part 2==========\n");
-    printf("2a. Test case: 0x40C80000\n");
-    printf("2b. Test case: 0xc3000000\n");
-    printf("2c. Test case: 0x3e000000\n");
-    printf("2d. Test case: 0x3EAAAAAB\n");
+
+    part2printwrap("2a.", 0x40C80000);
+    part2printwrap("2b.", 0xc3000000);
+    part2printwrap("2c.", 0x3e000000);
+    part2printwrap("2d.", 0x3eaaaaab);
+
     printf("=========================\n\n");
+}
+
+float packfloat(INTFLOAT_PTR ifp) {
+    unsigned int vect = 0;
+
+    unsigned int sign = 0;
+    unsigned int exp  = (unsigned int)*((unsigned int *)&ifp->exponent);
+    unsigned int frac = (unsigned int)*((unsigned int *)&ifp->fraction);
+
+    if (ifp->fraction < 0) {
+        sign = 1;
+        frac = ~frac + 1;
+    }
+
+    // get sign bit in position
+    sign <<= 31;
+
+    // clear the hidden 1
+    frac &= ~(1 << 23);
+
+    // remove bias and correct for no hidden 1
+    exp  += 127 - 1;
+
+    // position exponent
+    exp <<= 23;
+
+    // piece the float together
+    vect = sign | exp | frac;
+
+    return (float)*((float *)&vect);
+}
+
+void part3printwrap(const char *pref, unsigned int v) {
+    float f = (float)*((float *)&v);
+
+    INTFLOAT intfloat;
+
+    extract_float(&intfloat, f);
+
+    printf("%s Test case: 0x%08x\n", pref, v);
+    printf("  Float: %f\n", packfloat(&intfloat));
 }
 
 /* part3: prints out formatted output for part 3 */
 void part3(void) {
     printf("=========Part 3==========\n");
-    printf("3a. Test case: 0x40c80000\n");
-    printf("  Float:\n");
-    printf("3b. Test case: 0xC3000000\n");
-    printf("  Float:\n");
-    printf("3c. Test case: 0x3E000000\n");
-    printf("  Float:\n");
-    printf("3d. Test case: 0x3EAAAAAB\n");
-    printf("  Float:\n");
+
+    part3printwrap("3a.", 0x40c80000);
+    part3printwrap("3b.", 0xC3000000);
+    part3printwrap("3c.", 0x3E000000);
+    part3printwrap("3d.", 0x3EAAAAAB);
+
     printf("=========================\n\n");
 }
 
@@ -118,8 +177,6 @@ int main(void) {
     part5();
     part6();
     part7();
-
-    extract_float(NULL, 123.277);
 
     return 0;
 }
