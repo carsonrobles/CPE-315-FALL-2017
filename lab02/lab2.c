@@ -347,6 +347,7 @@ void part6(void) {
 
 float fmul(float a, float b) {
     INTFLOAT a_str, b_str;
+    INTFLOAT result;
 
     extract_float(&a_str, a);
     extract_float(&b_str, b);
@@ -354,29 +355,46 @@ float fmul(float a, float b) {
     int a_32 = a_str.fraction >> 7;
     int b_32 = b_str.fraction >> 7;
 
-    long int res = a_32 * b_32;
-    int exp = a_str.exponent + b_str.exponent;
 
     char sign = (a_32 >> 31) ^ (b_32 >> 31);
 
-    while ((sign && !(res & ~(1 << 30))) || (!sign && (res & ~(1 << 30)))) {
+    if (a_32 >> 31)
+        a_32 = ~a_32 + 1;
+
+    if (b_32 >> 31)
+        b_32 = ~b_32 + 1;
+
+    long int res = (long)a_32 * (long)b_32;
+    while (res && ((res >> 62) == 0 || (res >> 62) == 3))
         res <<= 1;
-        res |= sign << 31;
-    }
 
-    a_str.fraction = res >> 31;
-    a_str.exponent = exp;
+    result.fraction = (int)(res >> 32);
+    result.exponent = a_str.exponent + b_str.exponent - 1;
 
-    normalize(&a_str);
+    normalize(&result);
 
-    return (packfloat(&a_str));
+    if (sign) result.fraction = ~result.fraction + 1;
+
+    return (packfloat(&result));
+}
+
+void part7printwrap(const char *pref, unsigned int v1, unsigned int v2) {
+    float f1 = (float)*((float *)&v1);
+    float f2 = (float)*((float *)&v2);
+
+    float        prod_flt = fmul(f1, f2);
+    unsigned int prod_int = (unsigned int)*((unsigned int *)&prod_flt);
+
+    printf("%s 0x%08X and 0x%08X (%f x %f)\n", pref, v1, v2, f1, f2);
+    printf(" Product:0x%08X (%f Decimal Value)\n", prod_int, prod_flt);
 }
 
 /* part7: prints out formatted output for part 7 */
 void part7(void) {
     printf("=========Part 7==========\n");
 
-    printf("7 * 32.304 = %f\n", fmul(7.0, 32.304));
+    part7printwrap("7a.", 0x40200000, 0x40200000);
+    part7printwrap("7b.", 0xc1700000, 0x45800000);
 
     printf("=========================\n\n");
 }
