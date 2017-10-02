@@ -259,11 +259,6 @@ void part5printwrap(const char *pref, unsigned int v1, unsigned int v2) {
 void part5(void) {
     printf("=========Part 5==========\n");
 
-    float a = 10.2;
-    float b = 32.334;
-
-    printf("%f + %f = %f\n", a, b, fadd(a, b));
-
     part5printwrap("5a.", 0xBF800000, 0x3F800000);
     part5printwrap("5b.", 0x3F800000, 0x3E800000);
     part5printwrap("5c.", 0x40800000, 0xBE000000);
