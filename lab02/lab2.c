@@ -95,6 +95,8 @@ float packfloat(INTFLOAT_PTR ifp) {
     unsigned int exp  = (unsigned int)*((unsigned int *)&ifp->exponent);
     unsigned int frac = (unsigned int)*((unsigned int *)&ifp->fraction);
 
+    if (!(exp | frac)) return 0;
+
     if (ifp->fraction < 0) {
         sign = 1;
         frac = ~frac + 1;
@@ -239,6 +241,9 @@ float fadd(float a, float b) {
     b_str.exponent += 1;
 
     shift->fraction = a_str.fraction + b_str.fraction;
+
+    if (shift->fraction == 0)
+        shift->exponent = 0;
 
     normalize(shift);
 
