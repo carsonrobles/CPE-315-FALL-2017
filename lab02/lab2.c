@@ -62,6 +62,26 @@ void extract_float(INTFLOAT_PTR x, float f) {
     x->fraction = (int)frac;
 }
 
+void normalize(INTFLOAT_PTR x) {
+    unsigned int cond = 0, sign = 0;
+
+    if (x->fraction == 0) {
+        return;
+    }
+
+    sign = x->fraction >> 31;
+
+    while ((cond = x->fraction & 0xc0000000) == 0xc0000000 ||\
+            cond == 0x00000000) {
+        x->fraction <<= 1;
+        x->exponent--;
+    }
+
+    if (sign) {
+        x->fraction |= 0x80000000;
+    }
+}
+
 void part2printwrap(const char *pref, unsigned int v) {
     float f = (float)*((float *)&v);
 
@@ -143,8 +163,29 @@ void part3(void) {
 
 /* part4: prints out formatted output for part 4 */
 void part4(void) {
+    INTFLOAT intfloat;
+
     printf("=========Part 4==========\n");
-    printf("4a. Exp = %d, Frac = 0x%x\n");
+    intfloat.exponent = 0x00000001;
+    intfloat.fraction = 0x40000000;
+    normalize(&intfloat);
+    printf("4a. Exp = %3d, Frac = 0x%-7x\n", intfloat.exponent,\
+            intfloat.fraction);
+    intfloat.exponent = 0x00000000;
+    intfloat.fraction = 0x00200000;
+    normalize(&intfloat);
+    printf("4b. Exp = %3d, Frac = 0x%-7x\n", intfloat.exponent,\
+            intfloat.fraction);
+    intfloat.exponent = 0x0000000c;
+    intfloat.fraction = 0xffc00000;
+    normalize(&intfloat);
+    printf("4c. Exp = %3d, Frac = 0x%-7x\n", intfloat.exponent,\
+            intfloat.fraction);
+    intfloat.exponent = 0xfffffff8;
+    intfloat.fraction = 0x02000000;
+    normalize(&intfloat);
+    printf("4d. Exp = %3d, Frac = 0x%-7x\n", intfloat.exponent,\
+            intfloat.fraction);
     printf("=========================\n\n");
 }
 
