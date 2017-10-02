@@ -308,19 +308,40 @@ float fsub(float a, float b) {
     b_str.exponent += 1;
 
     shift->fraction = a_str.fraction - b_str.fraction;
+    
+    if (shift->fraction == 0) {
+        shift->exponent = 0;
+    }
 
     normalize(shift);
 
     return (packfloat(shift));
 }
 
+void part6printwrap(const char *pref, unsigned int v1, unsigned int v2) {
+    char cs1 = (v1 & (1 << 31)) ? 0 : '+';
+    char cs2 = (v2 & (1 << 31)) ? 0 : '+';
+
+    float f1  = (float)*((float *)&v1);
+    float f2  = (float)*((float *)&v2);
+    float sum = fsub(f1, f2);
+
+    printf("%s 0x%08X and 0x%08X (%c%f - ", pref, v1, v2, cs1, f1);
+    if (f2 >= 0) {
+        printf("%c%f)", cs2, f2);
+    } else {
+        printf("(%c%f))", cs2, f2);
+    }
+    printf("  Sum:0x%08X (%f Decimal Value)\n", (unsigned int)*((unsigned int *)&sum), sum);
+}
+
 /* part6: prints out formatted output for part 6 */
 void part6(void) {
     printf("=========Part 6==========\n");
     float a = 0, b = 0;
-    part5printwrap("6a.", 0x40400000, 0x3f800000);
-    part5printwrap("6b.", 0x40400000, 0xbf800000);
-    part5printwrap("6c.", 0x40000000, 0x40000000);
+    part6printwrap("6a.", 0x40400000, 0x3f800000);
+    part6printwrap("6b.", 0x40400000, 0xbf800000);
+    part6printwrap("6c.", 0x40000000, 0x40000000);
     printf("=========================\n\n");
 }
 
