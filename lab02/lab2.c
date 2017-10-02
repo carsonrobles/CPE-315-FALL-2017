@@ -196,7 +196,7 @@ void part4(void) {
 
 void arithrightshift(int *vect, int n) {
     char sign = *vect | (1 << 31);
-    
+
     *vect &= 0xffbfffff;
 
     while (n-- > 0) {
@@ -308,7 +308,7 @@ float fsub(float a, float b) {
     b_str.exponent += 1;
 
     shift->fraction = a_str.fraction - b_str.fraction;
-    
+
     if (shift->fraction == 0) {
         shift->exponent = 0;
     }
@@ -345,9 +345,38 @@ void part6(void) {
     printf("=========================\n\n");
 }
 
+float fmul(float a, float b) {
+    INTFLOAT a_str, b_str;
+
+    extract_float(&a_str, a);
+    extract_float(&b_str, b);
+
+    int a_32 = a_str.fraction >> 7;
+    int b_32 = b_str.fraction >> 7;
+
+    long int res = a_32 * b_32;
+    int exp = a_str.exponent + b_str.exponent;
+
+    char sign = (a_32 >> 31) ^ (b_32 >> 31);
+
+    while ((sign && !(res & ~(1 << 30))) || (!sign && (res & ~(1 << 30)))) {
+        res <<= 1;
+        res |= sign << 31;
+    }
+
+    a_str.fraction = res >> 31;
+    a_str.exponent = exp;
+
+    normalize(&a_str);
+
+    return (packfloat(&a_str));
+}
+
 /* part7: prints out formatted output for part 7 */
 void part7(void) {
     printf("=========Part 7==========\n");
+
+    printf("7 * 32.304 = %f\n", fmul(7.0, 32.304));
 
     printf("=========================\n\n");
 }
