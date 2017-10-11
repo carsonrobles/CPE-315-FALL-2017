@@ -17,12 +17,15 @@ main:
 #  add your instruction that will initialize $t3
 # Hint: how many words are in the list?
 
+	li	$t3, 0xa
+
 #  (add your code here ...)
 
 #	Initialize the total (sum) value into a register (e.g., $t0) = 0
 #	Add an instruction here that clears $t0
 
 #  [2c] (add your code here ...)
+	li	$t0, 0x0
 
 
 loop:	lw	$t1, 0($t4)		# [2d]  what does this do ?
@@ -32,20 +35,22 @@ loop:	lw	$t1, 0($t4)		# [2d]  what does this do ?
 #  (add your code here ...)
 
 #	(advance your pointer to the list of entries, $t4. By how much? your instruction(s) here:
-
 #	decrement the counter you are using in $t3. How?
 #	exit the loop when the counter hits 0)
 #	Finish the code that accumulates the total of entries in table1, putting
 #	the result into $t0.
 
-
 #   [2f]  (your code goes here)
-
-
+	addi	$t4, $t4, 0x4
+	addi 	$t3, $t3, 0xffffffff
+	add	$t0, $t0, $t1
+	bne	$t3, 0x0, loop
 
 #	[2g]  Now use the syscall capability.  See your green card.
 # 	Print the value of $t0
-
+	li	$v0, 1
+	add	$a0, $t0, $zero
+	syscall
 
 
 
