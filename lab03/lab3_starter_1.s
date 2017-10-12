@@ -21,7 +21,7 @@ main:
 
 #	[1d]  Now, you write an instruction that adds an immediate value of 0x33 to $t2
 #	And puts the result in $t3.  What's $t3 afterwards ? 
-#    ! YOUR CODE GOES HERE !
+	addi	$t3, $t2, 0x33
 
 #	[1e]  What if we want to load a 16-bit immediate value? 
 	li	$t0, 0x5145	# 16 bits into low bits of $t0
@@ -44,7 +44,7 @@ main:
 
 #	[1j]  What are the actual instructions produced by the assembler to do this?
 
-	nop				# This does nothing. What is it?  
+	nop				# This does nothing. What is it?
 
  
 
