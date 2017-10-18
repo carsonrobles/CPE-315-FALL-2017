@@ -30,7 +30,7 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	li	$v0, 4
 	la	$a0, hexstr
 	
-	#syscall
+	syscall
 	
 	li	$a0, 0x10000222
 	li	$a1, 0xffffffff
@@ -89,6 +89,34 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
+	syscall
+	
+	# double_sra
+	li 	$a0, 0x11111111
+	li	$a1, 0x11111111
+	li	$a2, 3
+	
+	jal 	double_sra
+	
+	add 	$s0, $v0, $zero
+	add	$s1, $v1, $zero
+	
+	la 	$a1, hexstr
+	add	$a0, $s0, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
+	syscall
+	
+	la 	$a1, hexstr
+	add	$a0, $s1, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
 	syscall
 
 donot:	nop
@@ -235,8 +263,8 @@ s_loop:	sll	$t1, $t1, 1
 	
 	sllv	$t1, $t1, $t0
 	
-	sra	$v0, $a0, $a2
-	srl	$v1, $a1, $a2
+	srav	$v0, $a0, $a2
+	srlv	$v1, $a1, $a2
 	or	$v1, $v1, $t1
 	
 	jr 	$ra
