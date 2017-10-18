@@ -175,7 +175,33 @@ double_add:
 	
 	jr 	$ra
 	
+# ------------------------------ #
+# double_sra
+#
+# $a0: high 32-bits of number
+# $a1: low 32-bits of number
+# $a2: number of bits to shift
+# ------------------------------ #
+double_sra:
+	add	$t0, $zero, $a2
+	and	$t1, $zero, $zero
 	
+s_loop:	sll	$t1, $t1, 1
+	or	$t1, $t1, 0x1
+	sub	$t0, $t0, 1
 	
+	bnez 	$t0, s_loop
 	
+	and	$t1, $t1, $a0
+	
+	li	$t0, 32
+	sub	$t0, $t0, $a2
+	
+	sllv	$t1, $t1, $t0
+	
+	sra	$v0, $a0, $a2
+	srl	$v1, $a1, $a2
+	or	$v1, $v1, $t1
+	
+	jr 	$ra
 	
