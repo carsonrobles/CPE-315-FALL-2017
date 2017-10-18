@@ -31,6 +31,37 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	
 	syscall
 	
+	# fibonacci tests
+	li	$a0, 0		# test case: 0
+	jal	fibonacci
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+	
+	li	$a0, 1		# test case 1
+	jal	fibonacci
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+
+	li	$a0, 5		# test case 5
+	jal	fibonacci
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+
+	li	$a0, 10		# test case 10
+	jal	fibonacci
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+
+	li	$a0, 20		# test case 20
+	jal	fibonacci
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+
 donot:	nop
 	b 	donot
 
@@ -99,28 +130,32 @@ bhloop:	addi	$s0, $s0, -1
 # fibonacci
 #
 # $a0: 32-bit binary value to conver to hexadecimal
-# $a1: address to begin writing null terminated hex string
 # ------------------------------ #
 fibonacci:
-	addi	$sp, $sp, -12			# increment stack pointer
-	sw	$ra, 0($sp)			# push return address
-
-	beq	$a0, $zero, return0		# if (n = 0) return 0
-	li	$t0, 1
-	beq	$a0, $t0, return1		# if (n = 1) return 1
-
-	addi	$a0, $a0, -1
-	jal	fibonacci			# fibonacci(n - 1)
+	ble	$a0, 1, base			# if (n = 0 or n = 1) { base case }
+	bgt	$a0, 1, recurse			# else { recursive case }
 	
-	addi	$a0, $a0, -1
-	jal	fibonacci			# fibonacci(n - 2)
-
-	addition:
+	base:					# if (n = 0 or n = 1)
+		addi	$v0, $a0, 0		#	return n
+		jr	$ra
 		
-
-	# TODO: return0
-	return0:
-		li	$v0, 0
-	# TODO: return1
-	return1:
-		li	$v0, 1
+	recurse:
+		addi	$sp, $sp, -12		# allocate space for stack
+		sw	$ra, 0($sp)		# store return address on stack
+		sw	$a0, 4($sp)		# store n on the stack
+		
+		addi	$a0, $a0, -1
+		jal	fibonacci		# fibonacci(n - 1)
+		sw	$v0, 8($sp)		# store return value on stack
+		
+		lw	$a0, 4($sp)		# restore relevant n
+		
+		addi	$a0, $a0, -2
+		jal	fibonacci		# fibonacci(n - 2)
+		
+		lw	$t0, 8($sp)		
+		add	$v0, $t0, $v0		# return fibonacci(n - 2) + fibonacci(n - 1)
+		
+		lw	$ra, 0($sp)		# restore relevant return address
+		addi	$sp, $sp, 12		# free stack frame
+		jr	$ra
