@@ -37,3 +37,34 @@ bintohex:
 	
 	# compute ASCII value
 	# store at address and update address
+	
+	
+# ------------------------------ #
+# fibonacci
+#
+# $a0: 32-bit binary value to conver to hexadecimal
+# $a1: address to begin writing null terminated hex string
+# ------------------------------ #
+fibonacci:
+	addi	$sp, $sp, -12			# increment stack pointer
+	sw	$ra, 0($sp)			# push return address
+
+	beq	$a0, $zero, return0		# if (n = 0) return 0
+	li	$t0, 1
+	beq	$a0, $t0, return1		# if (n = 1) return 1
+
+	addi	$a0, $a0, -1
+	jal	fibonacci			# fibonacci(n - 1)
+	
+	addi	$a0, $a0, -1
+	jal	fibonacci			# fibonacci(n - 2)
+
+	addition:
+		
+
+	# TODO: return0
+	return0:
+		li	$v0, 0
+	# TODO: return1
+	return1:
+		li	$v0, 1
