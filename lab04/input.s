@@ -20,6 +20,10 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	la	$a1, hexstr
 	li	$a0, 0x12345678
 	
+	li 	$s0, 0x13
+	li	$s1, 0xfff000ff
+	li      $s2, 0x10101010
+	
 	jal	bintohex
 	
 	li	$v0, 4
@@ -27,7 +31,8 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	
 	syscall
 	
-	b 	main
+donot:	nop
+	b 	donot
 
 # ------------------------------ #
 # bintohex
@@ -51,23 +56,23 @@ bintohex:
 
 	# init counter to decimal 10 and changeable address
 	addi	$s0, $zero, 0xa		# counter = 10
-	addi	$s1, $a1,   0x28	# address = last address
+	addi	$s1, $a1,   0x8		# address = last address
 	addi 	$s2, $zero, 0x0		# current nybble
 	addi	$s3, $a0,   0x0		# vector to convert
 	
 	# write null character
-	sw	$zero, 0($s1)
+	sb 	$zero, 0($s1)
 	
 	# iterate over $a0, 4 bits at a time
 bhloop:	addi	$s0, $s0, -1
-	addi	$s1, $s1, -4
+	addi	$s1, $s1, -1
 	
 	and 	$s2, $s3, 0xf
 	srl	$s3, $s3, 0x4
 	
 	addi	$s2, $s2, 0x30
 	
-	sw	$s2, 0($s1)
+	sb	$s2, 0($s1)
 	
 	bnez	$s0, bhloop
 	
