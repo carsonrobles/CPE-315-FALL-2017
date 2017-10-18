@@ -14,6 +14,7 @@
 
 	.data
 hexstr:	.space	10
+addstr: .space 	8
 
 	.text
 main:	and	$a1, $a1, $zero		# clear $a1
@@ -29,6 +30,34 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	li	$v0, 4
 	la	$a0, hexstr
 	
+	#syscall
+	
+	li	$a0, 0x10000222
+	li	$a1, 0xffffffff
+	li	$a2, 0x10020013
+	li	$a3, 0x11111111
+	
+	jal 	double_add
+	
+	add 	$s0, $v0, $zero
+	add	$s1, $v1, $zero
+	
+	la 	$a1, hexstr
+	add	$a0, $s0, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
+	syscall
+	
+	la 	$a1, hexstr
+	add	$a0, $s1, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
 	syscall
 	
 donot:	nop
@@ -37,7 +66,7 @@ donot:	nop
 # ------------------------------ #
 # bintohex
 #
-# $a0: 32-bit binary value to conver to hexadecimal
+# $a0: 32-bit binary value to convert to hexadecimal
 # $a1: address to begin writing null terminated hex string
 # ------------------------------ #
 bintohex:
@@ -124,3 +153,29 @@ fibonacci:
 	# TODO: return1
 	return1:
 		li	$v0, 1
+
+# ------------------------------ #
+# double_add
+#
+# $a0: high 32-bits of first number
+# $a1: low 32-bits of first number
+# $a2: high 32-btis of second number
+# $a3: low 32-bits of second number
+# ------------------------------ #
+double_add:
+	# add low words
+	addu	$v1, $a1, $a3
+	
+	# if overflow add 1 to $v0
+	sltu	$t0, $v1, $a1
+	
+	# add high words
+	add	$v0, $a0, $a2
+	add	$v0, $v0, $t0
+	
+	jr 	$ra
+	
+	
+	
+	
+	
