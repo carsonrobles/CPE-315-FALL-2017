@@ -15,6 +15,15 @@
 	.data
 hexstr:	.space	10
 addstr: .space 	8
+six_a:	.asciiz	"\n6a) "
+six_b:	.asciiz	"\n6b) "
+fibo:	.asciiz	"\nfibonacci:"
+n_0:	.asciiz "\nn = 0: "
+n_1:	.asciiz	"\nn = 1: "
+n_5:	.asciiz	"\nn = 5: "
+n_10:	.asciiz	"\nn = 10: "
+n_20:	.asciiz	"\nn = 20: "
+newln:	.asciiz	"\n"
 
 	.text
 main:	and	$a1, $a1, $zero		# clear $a1
@@ -61,34 +70,57 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	syscall
 	
 	# fibonacci tests
+	li	$v0, 4
+	la	$a0, fibo
+	syscall
+	
+	li	$v0, 4
+	la	$a0, n_0
+	syscall
 	li	$a0, 0		# test case: 0
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
 	syscall
 	
+	li	$v0, 4
+	la	$a0, n_1
+	syscall
 	li	$a0, 1		# test case 1
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
 	syscall
 
+	li	$v0, 4
+	la	$a0, n_5
+	syscall
 	li	$a0, 5		# test case 5
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
 	syscall
 
+li	$v0, 4
+	la	$a0, n_10
+	syscall
 	li	$a0, 10		# test case 10
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
 	syscall
 
+	li	$v0, 4
+	la	$a0, n_20
+	syscall
 	li	$a0, 20		# test case 20
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
+	syscall
+	
+	li	$v0, 4
+	la	$a0, newln
 	syscall
 	
 	# double_sra
@@ -117,6 +149,25 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	li	$v0, 4
 	la	$a0, hexstr
 	
+	syscall
+	
+	# reorder test cases
+	li	$v0, 4
+	la	$a0, six_a
+	syscall
+	li	$a0, 0x6608c000		# 6a
+	jal	reorder
+	move	$a0, $v0
+	li	$v0, 1
+	syscall
+	
+	li	$v0, 4
+	la	$a0, six_b
+	syscall
+	li	$a0, 0xc2008000		# 6b
+	jal	reorder
+	move	$a0, $v0
+	li	$v0, 1
 	syscall
 
 donot:	nop
@@ -191,12 +242,7 @@ bhloop:	addi	$s0, $s0, -1
 # ------------------------------ #
 fibonacci:
 	ble	$a0, 1, base			# if (n = 0 or n = 1) { base case }
-	bgt	$a0, 1, recurse			# else { recursive case }
-
-	base:					# if (n = 0 or n = 1)
-		addi	$v0, $a0, 0		#	return n
-		jr	$ra
-
+						# else { ...
 	recurse:
 		addi	$sp, $sp, -12		# allocate space for stack
 		sw	$ra, 0($sp)		# store return address on stack
@@ -216,6 +262,10 @@ fibonacci:
 
 		lw	$ra, 0($sp)		# restore relevant return address
 		addi	$sp, $sp, 12		# free stack frame
+		jr	$ra
+
+	base:					# if (n = 0 or n = 1)
+		addi	$v0, $a0, 0		#	return n
 		jr	$ra
 
 # ------------------------------ #
@@ -273,6 +323,8 @@ s_loop:	sll	$t1, $t1, 1
 # reorder
 #
 # $a0: number to be reordered
+# returns the number reordered in the specified format or
+# -1 in the case that the argument was invalid
 # ------------------------------ #
 reorder:
 	li	$t7, 0x19f70fff		# mask 1
@@ -280,21 +332,21 @@ reorder:
 	bne	$t0, 0, invalid
 	
 	li	$t7, 0xe0000000		# mask 2
-	or	$t0, $a0, $t7		# mask off f's
+	and	$t0, $a0, $t7		# mask off f's
 	srl	$v0, $t0, 25		# reorder f bits
 	
 	li	$t7, 0x06000000		# mask 3
-	or	$t0, $a0, $t7		# mask off n's
-	srl	$t0, $t0, $25		# reorder n bits
+	and	$t0, $a0, $t7		# mask off n's
+	srl	$t0, $t0, 25		# reorder n bits
 	or	$v0, $v0, $t0		# add n bits to return value
 	
 	li	$t7, 0x00080000		# mask 4
-	or	$t0, $a0, $t7		# mask off the x
+	and	$t0, $a0, $t7		# mask off the x
 	srl	$t0, $t0, 11		# reorder the x
 	or	$v0, $v0, $t0		# add the x to the return value
 	
 	li	$t7, 0x0000f000		# mask 5
-	or	$t0, $a0, $t7		# mask off y's
+	and	$t0, $a0, $t7		# mask off y's
 	or	$v0, $v0, $t0		# add y bits to return value
 	
 	jr	$ra
