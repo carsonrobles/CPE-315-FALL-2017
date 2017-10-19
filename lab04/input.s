@@ -30,7 +30,7 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	li	$v0, 4
 	la	$a0, hexstr
 	
-	#syscall
+	syscall
 	
 	li	$a0, 0x10000222
 	li	$a1, 0xffffffff
@@ -89,6 +89,34 @@ main:	and	$a1, $a1, $zero		# clear $a1
 	jal	fibonacci
 	move	$a0, $v0
 	li	$v0, 1
+	syscall
+	
+	# double_sra
+	li 	$a0, 0x11111111
+	li	$a1, 0x11111111
+	li	$a2, 3
+	
+	jal 	double_sra
+	
+	add 	$s0, $v0, $zero
+	add	$s1, $v1, $zero
+	
+	la 	$a1, hexstr
+	add	$a0, $s0, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
+	syscall
+	
+	la 	$a1, hexstr
+	add	$a0, $s1, $zero
+	jal	bintohex
+	
+	li	$v0, 4
+	la	$a0, hexstr
+	
 	syscall
 
 donot:	nop
@@ -208,6 +236,36 @@ double_add:
 	# add high words
 	add	$v0, $a0, $a2
 	add	$v0, $v0, $t0
+	
+	jr 	$ra
+	
+# ------------------------------ #
+# double_sra
+#
+# $a0: high 32-bits of number
+# $a1: low 32-bits of number
+# $a2: number of bits to shift
+# ------------------------------ #
+double_sra:
+	add	$t0, $zero, $a2
+	and	$t1, $zero, $zero
+	
+s_loop:	sll	$t1, $t1, 1
+	or	$t1, $t1, 0x1
+	sub	$t0, $t0, 1
+	
+	bnez 	$t0, s_loop
+	
+	and	$t1, $t1, $a0
+	
+	li	$t0, 32
+	sub	$t0, $t0, $a2
+	
+	sllv	$t1, $t1, $t0
+	
+	srav	$v0, $a0, $a2
+	srlv	$v1, $a1, $a2
+	or	$v1, $v1, $t1
 	
 	jr 	$ra
 
