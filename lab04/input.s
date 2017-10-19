@@ -158,7 +158,8 @@ bhloop:	addi	$s0, $s0, -1
 # ------------------------------ #
 # fibonacci
 #
-# $a0: 32-bit binary value to conver to hexadecimal
+# $a0: n (pertaining to the nth fibonacci number)
+# returns nth fibonacci number (where the 0th fibonacci number is 0)
 # ------------------------------ #
 fibonacci:
 	ble	$a0, 1, base			# if (n = 0 or n = 1) { base case }
@@ -209,3 +210,37 @@ double_add:
 	add	$v0, $v0, $t0
 	
 	jr 	$ra
+
+# ------------------------------ #
+# reorder
+#
+# $a0: number to be reordered
+# ------------------------------ #
+reorder:
+	li	$t7, 0x19f70fff		# mask 1
+	and	$t0, $a0, $t7		# invalid if 0
+	bne	$t0, 0, invalid
+	
+	li	$t7, 0xe0000000		# mask 2
+	or	$t0, $a0, $t7		# mask off f's
+	srl	$v0, $t0, 25		# reorder f bits
+	
+	li	$t7, 0x06000000		# mask 3
+	or	$t0, $a0, $t7		# mask off n's
+	srl	$t0, $t0, $25		# reorder n bits
+	or	$v0, $v0, $t0		# add n bits to return value
+	
+	li	$t7, 0x00080000		# mask 4
+	or	$t0, $a0, $t7		# mask off the x
+	srl	$t0, $t0, 11		# reorder the x
+	or	$v0, $v0, $t0		# add the x to the return value
+	
+	li	$t7, 0x0000f000		# mask 5
+	or	$t0, $a0, $t7		# mask off y's
+	or	$v0, $v0, $t0		# add y bits to return value
+	
+	jr	$ra
+	
+invalid:
+	li	$v0, -1			# return -1
+	jr	$ra
