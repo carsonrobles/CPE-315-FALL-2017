@@ -1,9 +1,9 @@
 #ifndef DECODE_H
 #define DECODE_H
 
-#define R_INSTR 69
-#define I_INSTR 420
-#define J_INSTR 666
+#define R_INSTR 0
+#define I_INSTR 1
+#define J_INSTR 2
 
 /* structure to represent a MIPS instruction */
 typedef struct _instruction {
