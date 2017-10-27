@@ -1,13 +1,13 @@
 #ifndef DECODE_H
 #define DECODE_H
 
-#define R_INSTR 0
-#define I_INSTR 1
-#define J_INSTR 2
+#define R_INSTR 'R'
+#define I_INSTR 'I'
+#define J_INSTR 'J'
 
 /* structure to represent a MIPS instruction */
 typedef struct _instruction {
-    unsigned char type;         /* type of instruction: R, I, J */
+    char type;         /* type of instruction: R, I, J */
 
     unsigned char op;           /* (R, I, J) */
 
