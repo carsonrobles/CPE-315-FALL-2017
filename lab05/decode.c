@@ -55,13 +55,13 @@ void print_cmd(instruction instr) {
         if (instr.op == 0x08 || instr.op == 0x09) {
             printf("R[$%02x] is being compared to R[$%02x]\n",\
                     instr.rs, instr.rt);
-            printf("effective address = PC + 4 + %08x\n", instr.imm << 2);
+            printf("\teffective address = PC + 4 + %08x\n", instr.imm << 2);
         } else {
-            printf("rs = $%02x, rt = $%02x\n, immediate = %04x",\
+            printf("\trs = $%02x, rt = $%02x\n, immediate = %04x",\
                     instr.rs, instr.rt, instr.imm);
         }
     } else {
-        printf("  effective address = 0x%08x\n", instr.wordind << 2);
+        printf("\teffective address = 0x%08x\n", instr.wordind << 2);
     }
 
     printf("\n");
