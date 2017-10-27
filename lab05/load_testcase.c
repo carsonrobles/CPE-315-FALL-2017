@@ -64,7 +64,6 @@ int main(void)
      {
      print_cmd(decode(mem[i/4]));
      }
-  printf("\n");
 
   exit(0);
   }

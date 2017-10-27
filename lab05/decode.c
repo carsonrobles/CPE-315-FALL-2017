@@ -34,7 +34,7 @@ void print_cmd(instruction instr) {
     printf("type = %c, opcode = 0x%02x\n", instr.type, instr.op);
 
     if (instr.type == R_INSTR) {
-        printf("function = 0x%02x, rs = 0x%02x, rt = 0x%02x, rd = 0x%02x\n",\
+        printf("\tfunction = 0x%02x, rs = 0x%02x, rt = 0x%02x, rd = 0x%02x\n",\
                 instr.funct, instr.rs, instr.rt, instr.rd);
         if (instr.funct == 0x0 || instr.funct == 0x2 || instr.funct == 0x3) {
             printf("\tname = ");
@@ -57,7 +57,7 @@ void print_cmd(instruction instr) {
                     instr.rs, instr.rt);
             printf("\teffective address = PC + 4 + %08x\n", instr.imm << 2);
         } else {
-            printf("\trs = $%02x, rt = $%02x, immediate = %04x",\
+            printf("\trs = $%02x, rt = $%02x, immediate = %04x\n",\
                     instr.rs, instr.rt, instr.imm);
         }
     } else {
