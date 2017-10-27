@@ -4,8 +4,8 @@
 
 typedef unsigned int MIPS, *MIPS_PTR;
 
-_instruction decode(MIPS bits) {
-    _instruction instr;
+instruction decode(MIPS bits) {
+    instruction instr;
 
     instr.op = (bits | 0) >> 26;
 
@@ -26,14 +26,15 @@ _instruction decode(MIPS bits) {
         instr.type = I_INSTR;
         instr.rs = (bits >> 21) & 0x1f;
         instr.rt = (bits >> 16) & 0x1f;
-        instr.imm = bits & 0xffff
+        instr.imm = bits & 0xffff;
     }
 
     return instr;
 }
 
-void print_cmd(_instruction instr) {
+void print_cmd(instruction instr) {
     printf("type = %c, opcode = 0x%02x\n", instr.type, instr.op);
+
     if (instr.type == R_INSTR) {
         printf("function = 0x%02x, rs = 0x%02x, rt = 0x%02x, rd = 0x%02x\n",\
                 instr.funct);
