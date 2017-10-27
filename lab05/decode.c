@@ -2,8 +2,6 @@
 
 #include "decode.h"
 
-typedef unsigned int MIPS, *MIPS_PTR;
-
 instruction decode(MIPS bits) {
     instruction instr;
 
@@ -62,6 +60,8 @@ void print_cmd(instruction instr) {
             printf("rs = $%02x, rt = $%02x\n, immediate = %04x",\
                     instr.rs, instr.rt, instr.imm);
         }
+    } else {
+        printf("\teffective address = 0x%08x\n", instr.wordind << 2);
     }
 
     printf("\n");

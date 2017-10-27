@@ -12,14 +12,12 @@
 #include <string.h>
 
 #include "mips_asm_header.h"
-
-
-typedef unsigned int MIPS, *MIPS_PTR;
+#include "decode.h"
 
 MB_HDR mb_hdr;    /* Header area */
 MIPS mem[1024];   /* Room for 4K bytes */
 
-main()
+int main(void)
   {
   FILE *fd;
   int n;
@@ -36,7 +34,7 @@ main()
 
 /* read the header and verify it. */
   fread((void *) &mb_hdr, sizeof(mb_hdr), 1, fd);
-  if (! strcmp(mb_hdr.signature, "~MB")==0)
+  if ((!strcmp(mb_hdr.signature, "~MB"))==0)
     { printf("\nThis isn't really a mips_asm binary file - quitting.\n"); exit(98); }
   
   printf("\n%s Loaded ok, program size=%d bytes.\n\n", filename, mb_hdr.size);
@@ -59,6 +57,12 @@ main()
   for (i = 0; i<memp; i+=4) /* i contains byte offset addresses */
      {
      printf("Instruction@%08X : %08X\n", i, mem[i/4]);
+     }
+  printf("\n");
+
+  for (i = 0; i<memp; i+=4) /* i contains byte offset addresses */
+     {
+     print_cmd(decode(mem[i/4]));
      }
   printf("\n");
 
