@@ -2,8 +2,6 @@
 
 #include "decode.h"
 
-typedef unsigned int MIPS, *MIPS_PTR;
-
 instruction decode(MIPS bits) {
     instruction instr;
 
@@ -36,10 +34,12 @@ void print_cmd(instruction instr) {
     printf("type = %c, opcode = 0x%02x\n", instr.type, instr.op);
 
     if (instr.type == R_INSTR) {
-        printf("function = 0x%02x, rs = 0x%02x, rt = 0x%02x, rd = 0x%02x\n",\
-                instr.funct);
+        printf("\tfunction = 0x%02x, rs = 0x%02x, rt = 0x%02x, rd = 0x%02x\n",\
+                instr.funct, instr.rs, instr.rt, instr.rd);
+
         if (instr.funct == 0x0 || instr.funct == 0x2 || instr.funct == 0x3) {
-            printf("\tname = ")
+            printf("\tname = ");
+
             if (instr.funct == 0x0) {
                 printf("sll");
             } else if (instr.funct == 0x2) {
@@ -53,6 +53,8 @@ void print_cmd(instruction instr) {
             printf("\tR[$%02x] being shifted by R[$%02x]\n", instr.rt, instr.rs);
         }
     } else if (instr.type == I_INSTR) {
-        printf();
+        printf("");
+    } else {
+        printf("\teffective address = 0x%08x\n", instr.wordind << 2);
     }
 }

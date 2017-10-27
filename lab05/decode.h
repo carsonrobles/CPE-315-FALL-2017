@@ -1,6 +1,8 @@
 #ifndef DECODE_H
 #define DECODE_H
 
+#include "mips_asm_header.h"
+
 #define R_INSTR 'R'
 #define I_INSTR 'I'
 #define J_INSTR 'J'
@@ -22,5 +24,9 @@ typedef struct _instruction {
 
     unsigned int wordind;       /* (J)       */
 } instruction;
+
+instruction decode(MIPS bits);
+
+void print_cmd(instruction instr);
 
 #endif
