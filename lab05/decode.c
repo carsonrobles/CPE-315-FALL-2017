@@ -57,7 +57,7 @@ void print_cmd(instruction instr) {
                     instr.rs, instr.rt);
             printf("\teffective address = PC + 4 + %08x\n", instr.imm << 2);
         } else {
-            printf("\trs = $%02x, rt = $%02x\n, immediate = %04x",\
+            printf("\trs = $%02x, rt = $%02x, immediate = %04x",\
                     instr.rs, instr.rt, instr.imm);
         }
     } else {
