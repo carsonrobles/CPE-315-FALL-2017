@@ -18,7 +18,7 @@ typedef struct _instruction {
     unsigned char shamt;        /* (R)       */
     unsigned char funct;        /* (R)       */
 
-    unsigned short imm;         /* (I)       */
+    unsigned int imm;         /* (I)       */
 
     unsigned int wordind;       /* (J)       */
 } instruction;
