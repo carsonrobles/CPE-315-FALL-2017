@@ -13,6 +13,15 @@ static int invalidop(unsigned char op) {
            op != 0x29 && op != 0x2b && op != 0x00);
 }
 
+static int invalidfunct(unsigned char funct) {
+    return (funct != 0x20 && funct != 0x21 && funct != 0x22 && \
+            funct != 0x23 && funct != 0x24 && funct != 0x27 && \
+            funct != 0x25 && funct != 0x26 && funct != 0x00 && \
+            funct != 0x02 && funct != 0x03 && funct != 0x04 && \
+            funct != 0x06 && funct != 0x07 && funct != 0x2a && \
+            funct != 0x2b && funct != 0x08 && funct != 0x09);
+}
+
 instruction decode(MIPS bits) {
     instruction instr;
 
@@ -31,6 +40,9 @@ instruction decode(MIPS bits) {
         instr.rd    = (bits >> 11) & 0x1f;
         instr.shamt = (bits >>  6) & 0x1f;
         instr.funct =  bits        & 0x3f;
+
+        if (invalidfunct(instr.funct))
+            instr.invalid = 1;
     } else if (instr.op == 0x2 || instr.op == 0x3) {
         // J
         instr.type    = J_INSTR;
