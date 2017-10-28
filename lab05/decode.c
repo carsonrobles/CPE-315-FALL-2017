@@ -1,13 +1,29 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "decode.h"
+
+static int invalidop(unsigned char op) {
+   return (op != 0x08 && op != 0x09 && op != 0x0c && \
+           op != 0x0d && op != 0x0e && op != 0x0a && \
+           op != 0x0b && op != 0x04 && op != 0x05 && \
+           op != 0x02 && op != 0x03 && op != 0x20 && \
+           op != 0x24 && op != 0x21 && op != 0x25 && \
+           op != 0x0f && op != 0x23 && op != 0x28 && \
+           op != 0x29 && op != 0x2b && op != 0x00);
+}
 
 instruction decode(MIPS bits) {
     instruction instr;
 
-    instr.op = (bits | 0) >> 26;
+    memset(&instr, 0, sizeof (instruction));
 
-    if (instr.op == 0x0) {
+    instr.data = bits;
+    instr.op   = (bits | 0) >> 26;
+
+    if (invalidop(instr.op)) {
+        instr.invalid = 1;
+    } else if (instr.op == 0x0) {
         // R
         instr.type  = R_INSTR;
         instr.rs    = (bits >> 21) & 0x1f;
@@ -31,6 +47,12 @@ instruction decode(MIPS bits) {
 }
 
 void print_cmd(instruction instr) {
+    if (instr.invalid) {
+        printf("invalid instruction: 0x%08x\n", instr.data);
+
+        return;
+    }
+
     printf("type = %c, opcode = 0x%02x\n", instr.type, instr.op);
 
     if (instr.type == R_INSTR) {

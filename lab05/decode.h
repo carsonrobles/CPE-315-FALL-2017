@@ -9,7 +9,10 @@
 
 /* structure to represent a MIPS instruction */
 typedef struct _instruction {
-    char type;         /* type of instruction: R, I, J */
+    char type;                  /* type of instruction: R, I, J */
+
+    unsigned int  data;
+    unsigned char invalid;
 
     unsigned char op;           /* (R, I, J) */
 
