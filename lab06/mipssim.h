@@ -31,10 +31,12 @@ typedef struct _instruction {
     unsigned int wordind;       /* (J)       */
 } instruction;
 
-int loadmem(MIPS *mem, unsigned int len);
+int loadmem(MIPS *mem, char *fn);
 
 instruction decode(MIPS bits);
 
 void instruction_print(instruction instr);
+void mem_dump(MIPS *mem, unsigned int proglen);
+void regfile_dump(MIPS *regfile);
 
 #endif
