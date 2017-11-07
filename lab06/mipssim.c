@@ -148,18 +148,92 @@ void instruction_print(instruction instr) {
     printf("\n");
 }
 
-void step(instruction instr, MIPS pc) {
+int step(instruction instr, MIPS pc, MIPS regfile[]) {
     switch (instr.type) {
         case 'R':
+            switch (instr.funct) {
+                case 0x0:
+                    regfile[instr.rd] = regfile[instr.rt] << instr.shamt;
+                    break;
+                case 0x2:
+                    regfile[instr.rd] = regfile[instr.rt] >> instr.shamt;
+                    break;
+                case 0x3:
+                    regfile[instr.rd] = (int) regfile[instr.rt] >> instr.shamt;
+                    break;
+                case 0x4:
+                    regfile[instr.rd] = regfile[instr.rt] << regfile[instr.rs];
+                    break;
+                case 0x6:
+                    regfile[instr.rd] = regfile[instr.rt] >> regfile[instr.rs];
+                    break;
+                case 0x7:
+                    regfile[instr.rd] = (int) regfile[instr.rt]\
+                            >> regfile[instr.rs];
+                    break;
+                case 0x8:
+                    pc = regfile[instr.rs];
+                    break;
+                case 0x9:
+                    pc = regfile[instr.rs];
+                    regfile[31] = pc + 4;
+                    break;
+                case 0x20:
+                    regfile[instr.rd] = (int) regfile[instr.rs]\
+                            + (int) regfile[instr.rt];
+                    break;
+                case 0x21:
+                    regfile[instr.rd] = regfile[instr.rs] + regfile[instr.rt];
+                    break;
+                case 0x22:
+                    regfile[instr.rd] = (int) regfile[instr.rs]\
+                            - (int) regfile[instr.rt];
+                    break;
+                case 0x23:
+                    regfile[instr.rd] = regfile[instr.rs] - regfile[instr.rt];
+                    break;
+                case 0x24:
+                    regfile[instr.rd] = regfile[instr.rs] & regfile[instr.rt];
+                    break;
+                case 0x25:
+                    regfile[instr.rd] = regfile[instr.rs] | regfile[instr.rt];
+                    break;
+                case 0x26:
+                    regfile[instr.rd] = regfile[instr.rs] ^ regfile[instr.rt];
+                    break;
+                case 0x27:
+                    regfile[instr.rd] = ~(regfile[instr.rs]\
+                            | regfile[instr.rt]);
+                    break;
+                case 0x2a:
+                    if ((int) regfile[instr.rs] < (int) regfile[instr.rt])
+                        regfile[instr.rd] = 1;
+                    else
+                        regfile[instr.rd] = 0;
+                    break;
+                case 0x2b:
+                    if (regfile[instr.rs] < regfile[instr.rt])
+                        regfile[instr.rd] = 1;
+                    else
+                        regfile[instr.rd] = 0;
+                    break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+            }
             break;
         case 'I':
             break;
         case 'J':
             break;
         default:
-            printf("Invalid type\n");
+            fprintf(stderr, "Invalid type\n");
+            return 1;
             break;
     }
+
+    return 0;
 }
 
 void mem_dump(MIPS *mem, unsigned int proglen) {
