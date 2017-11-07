@@ -4,17 +4,17 @@
 
 #include "mipssim.h"
 
-int loadmem(MIPS *mem, unsigned int len) {
+int loadmem(MIPS *mem, char *fn) {
     MB_HDR mb_hdr;    /* Header area */
     FILE *fd;
     int n;
     int memp;
     int i;
-    char filename[] = "testcase1.mb"; /* This is the filename to be loaded */
+    //char filename[] = "testcase1.mb"; /* This is the filename to be loaded */
 
     /* format the MIPS Binary header */
 
-    fd = fopen(filename, "rb");
+    fd = fopen(fn, "rb");
     if (fd == NULL) {
         printf("\nCouldn't load test case - quitting.\n");
         //exit(99);
@@ -32,7 +32,7 @@ int loadmem(MIPS *mem, unsigned int len) {
         return (-2);
     }
 
-    printf("\n%s Loaded ok, program size=%d bytes.\n\n", filename, mb_hdr.size);
+    printf("\n%s Loaded ok, program size=%d bytes.\n\n", fn, mb_hdr.size);
 
     /* read the binary code a word at a time */
 
@@ -43,7 +43,7 @@ int loadmem(MIPS *mem, unsigned int len) {
             memp += 4;  /* Increment byte pointer by size of instr */
         else
             break;
-    } while (memp < (len * sizeof (MIPS)));
+    } while (memp < (MIPS_MEM_SIZE * sizeof (MIPS)));
 
     fclose(fd);
 
@@ -146,4 +146,30 @@ void instruction_print(instruction instr) {
     }
 
     printf("\n");
+}
+
+void mem_dump(MIPS *mem, unsigned int proglen) {
+    int i;
+
+    printf("------------------------------\n");
+    printf("PROGRAM MEMORY\n\n");
+
+    for (i = 0; i < proglen; i += 4) { /* i contains byte offset addresses */
+        printf("Instruction@%08X : %08X\n", i, mem[i / 4]);
+    }
+
+    printf("------------------------------\n");
+}
+
+void regfile_dump(MIPS *regfile) {
+    int i;
+
+    printf("------------------------------\n");
+    printf("REGISTER FILE\n\n");
+
+    for (i = 0; i < MIPS_REGFILE_SIZE; i++) {
+        printf("%d:\t0x%08x\n", i, *(regfile + i));
+    }
+
+    printf("------------------------------\n");
 }

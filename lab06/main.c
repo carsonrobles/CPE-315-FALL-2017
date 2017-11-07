@@ -5,11 +5,17 @@
 #include "mips_asm_header.h"
 #include "mipssim.h"
 
-int main(void) {
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        fprintf(stderr, "usage: %s [program file]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     /* declare mips resources */
     MIPS mem[MIPS_MEM_SIZE];            // memory
     MIPS regfile[MIPS_REGFILE_SIZE];    // register file
     MIPS pc;                            // program counter
+    instruction ir;                     // instruction register
 
     /* initialize mips resources */
     memset(mem, 0, MIPS_MEM_SIZE);
@@ -17,19 +23,17 @@ int main(void) {
 
     pc = 0;
 
-    int proglen = loadmem(mem, 1024);
+    int proglen = loadmem(mem, argv[1]);
 
-    /* ok, now dump out the instructions loaded: */
+    mem_dump(mem, (unsigned int)proglen);
+    regfile_dump(regfile);
 
-    for (pc = 0; pc < proglen; pc += 4) { /* i contains byte offset addresses */
-        printf("Instruction@%08X : %08X\n", pc, mem[pc / 4]);
+    for (pc = 0; pc < proglen; pc += 4) {   /* i contains byte offset addresses */
+        ir = decode(mem[pc / 4]);           // fetch and decode
+
+        instruction_print(ir);
     }
 
-    printf("\n");
-
-    for (pc = 0; pc < proglen; pc += 4) { /* i contains byte offset addresses */
-        instruction_print(decode(mem[pc / 4]));
-    }
 
     return 0;
 }
