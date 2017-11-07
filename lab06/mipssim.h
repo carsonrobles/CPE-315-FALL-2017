@@ -34,6 +34,7 @@ typedef struct _instruction {
 int loadmem(MIPS *mem, char *fn);
 
 instruction decode(MIPS bits);
+void step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem);
 
 void instruction_print(instruction instr);
 void mem_dump(MIPS *mem, unsigned int proglen);
