@@ -51,7 +51,6 @@ int main(int argc, char **argv) {
     int proglen = loadmem(mem, argv[1]);
 
     mem_dump(mem, (unsigned int)proglen);
-    regfile_dump(regfile);
 
     int mode = MODE_INV;
 
@@ -65,7 +64,10 @@ int main(int argc, char **argv) {
         ir = decode(mem[pc / 4]);           // fetch and decode
 
         instruction_print(ir);
+        step(ir, &pc, regfile, mem);
     }
+
+    regfile_dump(regfile);
 
     return 0;
 }

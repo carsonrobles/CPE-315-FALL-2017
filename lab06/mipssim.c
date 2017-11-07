@@ -148,7 +148,11 @@ void instruction_print(instruction instr) {
     printf("\n");
 }
 
-int step(instruction instr, MIPS pc, MIPS regfile[]) {
+int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
+    MIPS *entry = NULL;
+
+    int signext_imm = (instr.imm & (1 << 15)) ? 0xffff0000 | instr.imm : instr.imm;
+
     switch (instr.type) {
         case 'R':
             switch (instr.funct) {
@@ -172,11 +176,11 @@ int step(instruction instr, MIPS pc, MIPS regfile[]) {
                             >> regfile[instr.rs];
                     break;
                 case 0x8:
-                    pc = regfile[instr.rs];
+                    *pc = regfile[instr.rs];
                     break;
                 case 0x9:
-                    pc = regfile[instr.rs];
-                    regfile[31] = pc + 4;
+                    *pc = regfile[instr.rs];
+                    regfile[31] = *pc + 4;
                     break;
                 case 0x20:
                     regfile[instr.rd] = (int) regfile[instr.rs]\
@@ -224,6 +228,79 @@ int step(instruction instr, MIPS pc, MIPS regfile[]) {
             }
             break;
         case 'I':
+            switch (instr.op) {
+                case 0x08:      // addi
+                    regfile[instr.rt] = (signed)regfile[instr.rs] + signext_imm;
+                break;
+                case 0x09:      // addiu
+                    regfile[instr.rt] = regfile[instr.rs] + instr.imm;
+                break;
+                case 0x0c:      // andi
+                    regfile[instr.rt] = regfile[instr.rs] & instr.imm;
+                break;
+                case 0x0d:      // ori
+                    regfile[instr.rt] = regfile[instr.rs] | instr.imm;
+                break;
+                case 0x0e:      // xori
+                    regfile[instr.rt] = regfile[instr.rs] ^ instr.imm;
+                break;
+                case 0x0a:      // slti
+                    regfile[instr.rt] = ((signed)regfile[instr.rs] < signext_imm) ? 1 : 0;
+                break;
+                case 0x0b:      // sltiu
+                    regfile[instr.rt] = (regfile[instr.rs] < instr.imm) ? 1 : 0;
+                break;
+                case 0x04:      // beq
+                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                break;
+                case 0x05:      // bne
+                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                break;
+                case 0x20:      // lb
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+
+                    // sign extend
+                    if (regfile[instr.rt] & 0x80) regfile[instr.rt] |= 0xffffff00;
+                break;
+                case 0x24:      // lbu
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+                break;
+                case 0x21:      // lh
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+
+                    // sign extend
+                    if (regfile[instr.rt] & 0x8000) regfile[instr.rt] |= 0xffff0000;
+                break;
+                case 0x25:      // lhu
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+                break;
+                case 0x0f:      // lui
+                    regfile[instr.rt] = instr.imm << 16;
+                break;
+                case 0x23:      // lw
+                    regfile[instr.rt] = mem[instr.rs + signext_imm];
+                break;
+                case 0x28:      // sb
+                    entry = &mem[regfile[instr.rs] + signext_imm];
+
+                    *entry &= 0xffffff00;
+                    *entry |= (regfile[instr.rt] & 0xff);
+                break;
+                case 0x29:      // sh
+                    entry = &mem[regfile[instr.rs] + signext_imm];
+
+                    *entry &= 0xffff0000;
+                    *entry |= (regfile[instr.rt] & 0xffff);
+                break;
+                case 0x2b:      // sw
+                    mem[regfile[instr.rs] + signext_imm] = regfile[instr.rt];
+                break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+                break;
+            }
             break;
         case 'J':
             break;
