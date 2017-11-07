@@ -147,3 +147,28 @@ void instruction_print(instruction instr) {
 
     printf("\n");
 }
+
+void step(instruction instr, MIPS pc) {
+    if (instr.type == 'R') {
+
+    } else if (instr.type == 'I') {
+
+    } else if (instr.type == 'J') {
+        
+    } else {
+        printf("Invalid type\n");
+        return;
+    }
+
+    switch (instr.type) {
+        case 'R':
+            break;
+        case 'I':
+            break;
+        case 'J':
+            break;
+        default:
+            printf("Invalid type\n");
+            break;
+    }
+}
