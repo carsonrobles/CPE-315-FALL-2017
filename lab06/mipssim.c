@@ -148,6 +148,20 @@ void instruction_print(instruction instr) {
     printf("\n");
 }
 
+void step(instruction instr, MIPS pc) {
+    switch (instr.type) {
+        case 'R':
+            break;
+        case 'I':
+            break;
+        case 'J':
+            break;
+        default:
+            printf("Invalid type\n");
+            break;
+    }
+}
+
 void mem_dump(MIPS *mem, unsigned int proglen) {
     int i;
 
