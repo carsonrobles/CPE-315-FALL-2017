@@ -6,39 +6,48 @@
 
 int loadmem(MIPS *mem, unsigned int len) {
     MB_HDR mb_hdr;    /* Header area */
-  FILE *fd;
-  int n;
-  int memp;
-  int i;
-  char filename[] = "testcase1.mb"; /* This is the filename to be loaded */
+    FILE *fd;
+    int n;
+    int memp;
+    int i;
+    char filename[] = "testcase1.mb"; /* This is the filename to be loaded */
 
-/* format the MIPS Binary header */
+    /* format the MIPS Binary header */
 
-  fd = fopen(filename, "rb");
-  if (fd == NULL) { printf("\nCouldn't load test case - quitting.\n"); exit(99); }
+    fd = fopen(filename, "rb");
+    if (fd == NULL) {
+        printf("\nCouldn't load test case - quitting.\n");
+        //exit(99);
+        return (-1);
+    }
 
-  memp = 0;   /* This is the memory pointer, a byte offset */
+    memp = 0;   /* This is the memory pointer, a byte offset */
 
-/* read the header and verify it. */
-  fread((void *) &mb_hdr, sizeof(mb_hdr), 1, fd);
-  if ((!strcmp(mb_hdr.signature, "~MB"))==0)
-    { printf("\nThis isn't really a mips_asm binary file - quitting.\n"); exit(98); }
-  
-  printf("\n%s Loaded ok, program size=%d bytes.\n\n", filename, mb_hdr.size);
+    /* read the header and verify it. */
+    fread((void *) &mb_hdr, sizeof(mb_hdr), 1, fd);
 
-/* read the binary code a word at a time */
-  
-  do {
-    n = fread((void *) &mem[memp/4], 4, 1, fd); /* note div/4 to make word index */
-    if (n) 
-      memp += 4;  /* Increment byte pointer by size of instr */
-    else
-      break;       
+    if ((!strcmp(mb_hdr.signature, "~MB"))==0) {
+        printf("\nThis isn't really a mips_asm binary file - quitting.\n");
+        //exit(98);
+        return (-2);
+    }
+
+    printf("\n%s Loaded ok, program size=%d bytes.\n\n", filename, mb_hdr.size);
+
+    /* read the binary code a word at a time */
+
+    do {
+        n = fread((void *) &mem[memp/4], 4, 1, fd); /* note div/4 to make word index */
+
+        if (n)
+            memp += 4;  /* Increment byte pointer by size of instr */
+        else
+            break;
     } while (memp < (len * sizeof (MIPS)));
 
-  fclose(fd);
+    fclose(fd);
 
-  return (memp);
+    return (memp);
 }
 
 static int invalidop(unsigned char op) {
@@ -96,7 +105,7 @@ instruction decode(MIPS bits) {
     return instr;
 }
 
-void print_cmd(instruction instr) {
+void instruction_print(instruction instr) {
     if (instr.invalid) {
         printf("invalid instruction: 0x%08x\n", instr.data);
 

@@ -3,6 +3,9 @@
 
 #include "mips_asm_header.h"
 
+#define MIPS_MEM_SIZE     1024
+#define MIPS_REGFILE_SIZE 32
+
 #define R_INSTR 'R'
 #define I_INSTR 'I'
 #define J_INSTR 'J'
@@ -32,6 +35,6 @@ int loadmem(MIPS *mem, unsigned int len);
 
 instruction decode(MIPS bits);
 
-void print_cmd(instruction instr);
+void instruction_print(instruction instr);
 
 #endif
