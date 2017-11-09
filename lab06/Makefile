@@ -8,15 +8,22 @@ ASM  = /home/dretz/Share/mips_asm
 TSRC = $(wildcard test/*.s)
 TOUT = $(TSRC:.s=.mb)
 
-$(EXE): $(HDR) $(SRC)
-	$(CC) -c $(SRC)
-	$(CC) $(OBJ) -o $(EXE)
+.PHONY: all
+all : $(EXE)
+
+$(EXE) : $(OBJ)
+	$(CC) $(OBJ) -o $@
+
+mipssim.o : mipssim.c mipssim.h mips_asm_header.h
+	$(CC) -c $< -o $@
+
+main.o : main.c mipssim.h mips_asm_header.h
+	$(CC) -c $< -o $@
 
 .PHONY: test
-test: $(TST)
+test :
 	$(foreach file, $(TSRC), $(ASM) $(file) | grep "Source file\|Error count";)
 
-
-.PHONY: clean
-clean:
-	rm -f $(OBJ) $(EXE) $(TOUT)
+.PHONY : clean
+clean :
+	rm -f $(EXE) $(OBJ) $(TOUT)
