@@ -12,7 +12,7 @@ TOUT = $(TSRC:.s=.mb)
 all : $(EXE)
 
 $(EXE) : $(OBJ)
-	$(CC) $(OBJ) -o $@
+	$(CC) $^ -o $@
 
 mipssim.o : mipssim.c mipssim.h mips_asm_header.h
 	$(CC) -c $< -o $@
