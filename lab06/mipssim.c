@@ -275,39 +275,55 @@ int step(mipscontext *mips) {
 
                     // sign extend
                     if (regfile[instr.rt] & 0x80) regfile[instr.rt] |= 0xffffff00;
+
+                    mips->readcount++;
                 break;
                 case 0x24:      // lbu
                     regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+
+                    mips->readcount++;
                 break;
                 case 0x21:      // lh
                     regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
 
                     // sign extend
                     if (regfile[instr.rt] & 0x8000) regfile[instr.rt] |= 0xffff0000;
+
+                    mips->readcount++;
                 break;
                 case 0x25:      // lhu
                     regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+
+                    mips->readcount++;
                 break;
                 case 0x0f:      // lui
                     regfile[instr.rt] = instr.imm << 16;
                 break;
                 case 0x23:      // lw
                     regfile[instr.rt] = mem[instr.rs + signext_imm];
+
+                    mips->readcount++;
                 break;
                 case 0x28:      // sb
                     entry = &mem[regfile[instr.rs] + signext_imm];
 
                     *entry &= 0xffffff00;
                     *entry |= (regfile[instr.rt] & 0xff);
+
+                    mips->writecount++;
                 break;
                 case 0x29:      // sh
                     entry = &mem[regfile[instr.rs] + signext_imm];
 
                     *entry &= 0xffff0000;
                     *entry |= (regfile[instr.rt] & 0xffff);
+
+                    mips->writecount++;
                 break;
                 case 0x2b:      // sw
                     mem[regfile[instr.rs] + signext_imm] = regfile[instr.rt];
+
+                    mips->writecount++;
                 break;
                 default:
                     fprintf(stderr, "Invalid function\n");
@@ -332,7 +348,6 @@ int step(mipscontext *mips) {
             }
             break;
         default:
-            mips->instrcount--;
             fprintf(stderr, "Invalid type\n");
             return 1;
             break;
