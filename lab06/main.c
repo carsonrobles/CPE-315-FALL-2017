@@ -43,8 +43,8 @@ int main(int argc, char **argv) {
     instruction ir;                     // instruction register
 
     /* initialize mips resources */
-    memset(mem, 0, MIPS_MEM_SIZE);
-    memset(regfile, 0, MIPS_REGFILE_SIZE);
+    memset(mem, 0, MIPS_MEM_SIZE * sizeof (MIPS));
+    memset(regfile, 0, MIPS_REGFILE_SIZE * sizeof(MIPS));
 
     pc = 0;
 
@@ -59,15 +59,16 @@ int main(int argc, char **argv) {
     int mode = MODE_INV;
 
     for (pc = 0; pc < proglen; pc += 4) {   /* i contains byte offset addresses */
+        ir = decode(mem[pc / 4]);           // fetch and decode
+
+        instruction_print(ir);
+
         if (mode != MODE_RUN)
             mode = prompt();
 
         if (mode == MODE_QUIT)
             break;
 
-        ir = decode(mem[pc / 4]);           // fetch and decode
-
-        instruction_print(ir);
         step(ir, &pc, regfile, mem);
     }
 
