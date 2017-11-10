@@ -51,16 +51,18 @@ int main(int argc, char **argv) {
     for (mips.pc = 0; mips.pc < mips.proglen; mips.pc += 4) {
         mips.ir = decode(mips.mem[mips.pc / 4]);
 
-        mipscontext_display(&mips);
-
-        if (mode != MODE_RUN)
+        if (mode != MODE_RUN) {
+            mipscontext_display(&mips);
             mode = prompt();
+        }
 
         if (mode == MODE_QUIT)
             break;
 
         step(&mips);
     }
+
+    mipscontext_display(&mips);
 
     return 0;
 }
