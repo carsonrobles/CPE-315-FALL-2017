@@ -36,7 +36,7 @@ typedef struct _instruction {
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {
     unsigned int memoffset;
-    unsigned int intrcount;
+    unsigned int instrcount;
     unsigned int readcount;
     unsigned int writecount;
     unsigned int clkcount;

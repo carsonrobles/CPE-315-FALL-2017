@@ -332,10 +332,13 @@ int step(mipscontext *mips) {
             }
             break;
         default:
+            mips->instrcount--;
             fprintf(stderr, "Invalid type\n");
             return 1;
             break;
     }
+
+    mips->instrcount++;
 
     /* set $zero back to 0 in case it was altered */
     regfile[0] = 0;
@@ -357,6 +360,11 @@ void mem_dump(mipscontext *mips) {
 void mipscontext_display(mipscontext *mips) {
     printf("\n=== SUMMARY ===\n");
 
+    printf("\nInstruction Count:\t%u\n", mips->instrcount);
+    printf("Memory Reads:     \t%u\n", mips->readcount);
+    printf("Memory Writes:    \t%u\n", mips->writecount);
+    printf("Clock Cycles:     \t%u\n", mips->clkcount);
+
     int i;
 
     for (i = 0; i < MIPS_REGFILE_SIZE; i++) {
@@ -370,7 +378,8 @@ void mipscontext_display(mipscontext *mips) {
 
     printf("\n\n");
 
-    instruction_print(mips->ir);
+    if (mips->pc < mips->proglen)
+        instruction_print(mips->ir);
 
     printf("\n");
 }
