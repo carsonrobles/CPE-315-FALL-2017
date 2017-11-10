@@ -1,4 +1,6 @@
-CC  = gcc
+CC   = gcc
+CFLG = -g
+
 HDR = mips_asm_header.h mipssim.h
 SRC = main.c mipssim.c
 OBJ = $(SRC:.c=.o)
@@ -12,13 +14,13 @@ TOUT = $(TSRC:.s=.mb)
 all : $(EXE)
 
 $(EXE) : $(OBJ)
-	$(CC) $^ -o $@
+	$(CC) $(CFLG) $^ -o $@
 
 mipssim.o : mipssim.c mipssim.h mips_asm_header.h
-	$(CC) -c $< -o $@
+	$(CC) $(CFLG) -c $< -o $@
 
 main.o : main.c mipssim.h mips_asm_header.h
-	$(CC) -c $< -o $@
+	$(CC) $(CFLG) -c $< -o $@
 
 .PHONY: test
 test :

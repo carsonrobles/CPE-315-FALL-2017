@@ -50,6 +50,10 @@ int main(int argc, char **argv) {
 
     int proglen = loadmem(mem, argv[1]);
 
+    /* check for invalid input file */
+    if (proglen < 0)
+        exit(EXIT_FAILURE);
+
     mem_dump(mem, (unsigned int)proglen);
 
     int mode = MODE_INV;
