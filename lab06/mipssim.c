@@ -133,7 +133,8 @@ void instruction_print(instruction instr) {
                     instr.rt, instr.rs);
         }
     } else if (instr.type == I_INSTR) {
-        if (instr.op == 0x08 || instr.op == 0x09) {
+        // TODO: check this line: if (instr.op == 0x08 || instr.op == 0x09) {
+        if (instr.op == 0x04 || instr.op == 0x05) {
             printf("R[$%02x] is being compared to R[$%02x]\n",\
                     instr.rs, instr.rt);
             printf("\teffective address = PC + 4 + %08x\n", instr.imm << 2);
@@ -309,6 +310,9 @@ int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
             return 1;
             break;
     }
+
+    /* set $zero back to 0 in case it was altered */
+    regfile[0] = 0;
 
     return 0;
 }
