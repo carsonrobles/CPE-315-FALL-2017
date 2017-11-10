@@ -33,13 +33,29 @@ typedef struct _instruction {
     unsigned int wordind;       /* (J)       */
 } instruction;
 
-int loadmem(MIPS *mem, char *fn);
+/* structure to represent MIPS runtime context */
+typedef struct _mipscontext {
+    unsigned int memoffset;
+    unsigned int intrcount;
+    unsigned int readcount;
+    unsigned int writecount;
+    unsigned int clkcount;
+    unsigned int proglen;
+
+    MIPS mem[MIPS_MEM_SIZE];            // memory
+    MIPS regfile[MIPS_REGFILE_SIZE];    // register file
+    MIPS pc;                            // program counter
+    instruction ir;                     // instruction register
+} mipscontext;
+
+int loadmem(mipscontext *mips, char *fn);
 
 instruction decode(MIPS bits);
-int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem);
+int step(mipscontext *mips);
 
 void instruction_print(instruction instr);
-void mem_dump(MIPS *mem, unsigned int proglen);
-void regfile_dump(MIPS *regfile);
+void mem_dump(mipscontext *mips);
+void regfile_dump(mipscontext *mips);
+void mipscontext_display(mipscontext *mips);
 
 #endif

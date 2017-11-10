@@ -4,7 +4,7 @@
 
 #include "mipssim.h"
 
-int loadmem(MIPS *mem, char *fn) {
+int loadmem(mipscontext *mips, char *fn) {
     MB_HDR mb_hdr;    /* Header area */
     FILE *fd;
     int n;
@@ -37,7 +37,7 @@ int loadmem(MIPS *mem, char *fn) {
     /* read the binary code a word at a time */
 
     do {
-        n = fread((void *) &mem[memp/4], 4, 1, fd); /* note div/4 to make word index */
+        n = fread((void *) &mips->mem[memp/4], 4, 1, fd); /* note div/4 to make word index */
 
         if (n)
             memp += 4;  /* Increment byte pointer by size of instr */
@@ -46,6 +46,8 @@ int loadmem(MIPS *mem, char *fn) {
     } while (memp < (MIPS_MEM_SIZE * sizeof (MIPS)));
 
     fclose(fd);
+
+    mips->proglen = (unsigned int)memp;
 
     return (memp);
 }
@@ -146,12 +148,17 @@ void instruction_print(instruction instr) {
     } else {
         printf("\teffective address = 0x%08x\n", instr.wordind << 2);
     }
-
-    printf("\n");
 }
 
-int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
+//int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
+int step(mipscontext *mips) {
     MIPS *entry = NULL;
+
+    MIPS *pc      = &(mips->pc);
+    MIPS *regfile = mips->regfile;
+    MIPS *mem     = mips->mem;
+
+    instruction instr = mips->ir;
 
     int signext_imm = (instr.imm & (1 << 15)) ? 0xffff0000 | instr.imm : instr.imm;
 
@@ -336,28 +343,35 @@ int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
     return 0;
 }
 
-void mem_dump(MIPS *mem, unsigned int proglen) {
+//void mem_dump(MIPS *mem, unsigned int proglen) {
+void mem_dump(mipscontext *mips) {
     int i;
 
-    printf("------------------------------\n");
-    printf("PROGRAM MEMORY\n\n");
+    printf("=== PROGRAM MEMORY ===\n");
 
-    for (i = 0; i < proglen; i += 4) { /* i contains byte offset addresses */
-        printf("Instruction@%08X : %08X\n", i, mem[i / 4]);
+    for (i = 0; i < mips->proglen; i += 4) { /* i contains byte offset addresses */
+        printf("Instruction@%08X : %08X\n", i, mips->mem[i / 4]);
     }
-
-    printf("------------------------------\n");
 }
 
-void regfile_dump(MIPS *regfile) {
-    int i;
+void mipscontext_display(mipscontext *mips) {
+    printf("\n=== SUMMARY ===\n");
 
-    printf("------------------------------\n");
-    printf("REGISTER FILE\n\n");
+    int i;
 
     for (i = 0; i < MIPS_REGFILE_SIZE; i++) {
-        printf("%d:\t0x%08x\n", i, *(regfile + i));
+        if (i % 4 == 0)
+            printf("\n");
+        else
+            printf("\t");
+
+        printf("%d:\t0x%08x", i, mips->regfile[i]);
     }
 
-    printf("------------------------------\n");
+    printf("\n\n");
+
+    instruction_print(mips->ir);
+
+    printf("\n");
 }
+
