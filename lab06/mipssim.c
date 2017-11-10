@@ -66,7 +66,8 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x25 && funct != 0x26 && funct != 0x00 && \
             funct != 0x02 && funct != 0x03 && funct != 0x04 && \
             funct != 0x06 && funct != 0x07 && funct != 0x2a && \
-            funct != 0x2b && funct != 0x08 && funct != 0x09);
+            funct != 0x2b && funct != 0x08 && funct != 0x09 && \
+            funct != 0x0c);
 }
 
 instruction decode(MIPS bits) {
@@ -222,6 +223,11 @@ int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
                     else
                         regfile[instr.rd] = 0;
                     break;
+                case 0xc:
+                    if (regfile[2] == 0x10) {
+                        return TERMINATE;
+                    }
+                    break;
                 default:
                     fprintf(stderr, "Invalid function\n");
                     return 2;
@@ -304,6 +310,19 @@ int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
             }
             break;
         case 'J':
+            switch (instr.op) {
+                case 0x2:
+                    *pc = instr.wordind << 2;
+                    break;
+                case 0x3:
+                    regfile[31] = *pc + 4;
+                    *pc = instr.wordind << 2;
+                    break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+            }
             break;
         default:
             fprintf(stderr, "Invalid type\n");
