@@ -10,6 +10,8 @@
 #define I_INSTR 'I'
 #define J_INSTR 'J'
 
+#define TERMINATE 69
+
 /* structure to represent a MIPS instruction */
 typedef struct _instruction {
     char type;                  /* type of instruction: R, I, J */
