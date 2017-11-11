@@ -57,10 +57,10 @@ int main(int argc, char **argv) {
             mode = prompt();
         }
 
-        if (mode == MODE_QUIT)
+        if (mode == MODE_QUIT || step(&mips) == TERMINATE)
             break;
 
-        step(&mips);
+        //step(&mips);
     }
 
     mipscontext_display(&mips);
