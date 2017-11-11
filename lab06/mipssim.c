@@ -265,10 +265,12 @@ int step(mipscontext *mips) {
                     regfile[instr.rt] = (regfile[instr.rs] < instr.imm) ? 1 : 0;
                 break;
                 case 0x04:      // beq
-                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    //*pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
                 break;
                 case 0x05:      // bne
-                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    //*pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
                 break;
                 case 0x20:      // lb
                     regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
@@ -375,6 +377,7 @@ void mem_dump(mipscontext *mips) {
 void mipscontext_display(mipscontext *mips) {
     printf("\n=== SUMMARY ===\n");
 
+    printf("\nPC:               \t%u\n", mips->pc);
     printf("\nInstruction Count:\t%u\n", mips->instrcount);
     printf("Memory Reads:     \t%u\n", mips->readcount);
     printf("Memory Writes:    \t%u\n", mips->writecount);
