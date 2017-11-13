@@ -234,6 +234,7 @@ int step(mipscontext *mips) {
                     if (regfile[2] == 10) {
                         return TERMINATE;
                     }
+
                     break;
                 default:
                     fprintf(stderr, "Invalid function\n");
