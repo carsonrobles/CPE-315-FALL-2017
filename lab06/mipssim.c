@@ -231,7 +231,7 @@ int step(mipscontext *mips) {
                         regfile[instr.rd] = 0;
                     break;
                 case 0xc:
-                    if (regfile[2] == 0x10) {
+                    if (regfile[2] == 10) {
                         return TERMINATE;
                     }
                     break;

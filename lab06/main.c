@@ -49,7 +49,6 @@ int main(int argc, char **argv) {
     int mode = MODE_INV;
 
     for (mips.pc = 0; mips.pc < mips.proglen; mips.pc += 4) {
-        printf("PC: %d\n", mips.pc);
         mips.ir = decode(mips.mem[mips.pc / 4]);
 
         if (mode != MODE_RUN) {
@@ -57,10 +56,8 @@ int main(int argc, char **argv) {
             mode = prompt();
         }
 
-        if (mode == MODE_QUIT)
+        if (mode == MODE_QUIT || step(&mips) == TERMINATE)
             break;
-
-        step(&mips);
     }
 
     mipscontext_display(&mips);
