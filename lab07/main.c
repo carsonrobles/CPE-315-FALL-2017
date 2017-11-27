@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0; !halt; clocks++) {
-        /* decode goes here */
+        decode(fetched, *instr);
         fetched = fetch(*mips);
     }
 
