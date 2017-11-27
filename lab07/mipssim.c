@@ -81,32 +81,34 @@ MIPS fetch(mipscontext *mc) {
 void decode(MIPS bits, decoded *instr) {
     memset(&instr, 0, sizeof (instruction));
 
-    instr.data = bits;
-    instr.op   = (bits | 0) >> 26;
+    instr->data = bits;
+    instr->op   = (bits | 0) >> 26;
 
-    if (invalidop(instr.op)) {
-        instr.invalid = 1;
+    if (invalidop(instr->op)) {
+        instr->invalid = 1;
     } else if (instr.op == 0x0) {
         // R
-        instr.type  = R_INSTR;
-        instr.rs    = regfile[(bits >> 21) & 0x1f];
-        instr.rt    = regfile[(bits >> 16) & 0x1f];
-        instr.rd    = regfile[(bits >> 11) & 0x1f];
-        instr.shamt = (bits >>  6) & 0x1f;
-        instr.funct =  bits        & 0x3f;
+        instr->type  = R_INSTR;
+        instr->rs    = (bits >> 21) & 0x1f;
+        instr->rs_val = regfile[instr->rs];
+        instr->rt    = (bits >> 16) & 0x1f;
+        instr->rt_val = regfile[instr->rt];
+        instr->rd    = (bits >> 11) & 0x1f;
+        instr->shamt = (bits >>  6) & 0x1f;
+        instr->funct =  bits        & 0x3f;
 
-        if (invalidfunct(instr.funct))
-            instr.invalid = 1;
-    } else if (instr.op == 0x2 || instr.op == 0x3) {
+        if (invalidfunct(instr->funct))
+            instr->invalid = 1;
+    } else if (instr->op == 0x2 || instr->op == 0x3) {
         // J
-        instr.type    = J_INSTR;
-        instr.wordind = bits & 0x3ffffff;
+        instr->type    = J_INSTR;
+        instr->wordind = bits & 0x3ffffff;
     } else {
         // I
-        instr.type = I_INSTR;
-        instr.rs = regfile[(bits >> 21) & 0x1f];
-        instr.rt = regfile[(bits >> 16) & 0x1f];
-        instr.imm = bits & 0xffff;
+        instr->type = I_INSTR;
+        instr->rs = regfile[(bits >> 21) & 0x1f];
+        instr->rt = regfile[(bits >> 16) & 0x1f];
+        instr->imm = bits & 0xffff;
     }
 }
 

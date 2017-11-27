@@ -21,10 +21,12 @@ typedef struct _decoded {
 
     unsigned char op;           /* (R, I, J) */
 
-    unsigned int rs;           /* (R, I)    */
-    unsigned int rt;           /* (R, I)    */
+    unsigned char rs;           /* (R, I)    */
+    unsigned int rs_val
+    unsigned char rt;           /* (R, I)    */
+    unsigned int rt_val;
 
-    unsigned int rd;           /* (R)       */
+    unsigned char rd;           /* (R)       */
     unsigned char shamt;        /* (R)       */
     unsigned char funct;        /* (R)       */
 
