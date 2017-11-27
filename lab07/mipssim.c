@@ -123,6 +123,22 @@ void memory_access(MIPS *mem, executed *ex) {
             break;
         default:
             fprintf(stderr, "Invalid memory access mode\n");
+            exit(EXIT_FAILURE);
+            break;
+    }
+}
+
+void writeback(MIPS *regfile, memmed *m) {
+    switch(m->mode) {
+        case WRITE:
+            regfile[m->dest] = m->data;
+            break;
+        case DONOT:
+            return;
+            break;
+        default:
+            fprintf(stderr, "Invalid writeback mode\n");
+            exit(EXIT_FAILURE);
             break;
     }
 }
