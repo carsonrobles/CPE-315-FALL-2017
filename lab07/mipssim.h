@@ -26,7 +26,7 @@ typedef struct _decoded {
     unsigned char op;           /* (R, I, J) */
 
     unsigned char rs;           /* (R, I)    */
-    unsigned int rs_val
+    unsigned int rs_val;
     unsigned char rt;           /* (R, I)    */
     unsigned int rt_val;
 
@@ -37,7 +37,19 @@ typedef struct _decoded {
     unsigned int imm;           /* (I)       */
 
     unsigned int wordind;       /* (J)       */
+
+    unsigned int pc;
 } decoded;
+
+typedef struct _executed {
+    unsigned char jmp;          /* non zero if PC is being set to pc_src */
+    unsigned int  pc_src;
+
+    unsigned int alu_out;
+    unsigned int write_data;
+    unsigned char reg_dest;    // rt for imm
+    unsigned char access;       // memory access mode
+} executed;
 
 typedef struct _memmed {
     unsigned char mode;
@@ -64,6 +76,8 @@ int loadmem(mipscontext *mips, char *fn);
 
 void decode(MIPS bits, decoded *instr);
 int step(mipscontext *mips);
+
+executed execute(decoded *decode_in);
 
 void instruction_print(decoded instr);
 void mem_dump(mipscontext *mips);

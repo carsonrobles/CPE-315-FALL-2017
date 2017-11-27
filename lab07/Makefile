@@ -2,7 +2,7 @@ CC   = gcc
 CFLG = -g
 
 HDR = mips_asm_header.h mipssim.h
-SRC = main.c mipssim.c
+SRC = mipssim.c main.c
 OBJ = $(SRC:.c=.o)
 EXE = a.out
 

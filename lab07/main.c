@@ -12,6 +12,8 @@
 #define MODE_QUIT  3
 #define MODE_INV  -1
 
+int halt = 0;
+
 static int prompt(void) {
     char inp[MAX_INPUT_SIZE];
 
@@ -50,7 +52,7 @@ int main(int argc, char **argv) {
 
     int mode = MODE_INV;
 
-    for (mips.pc = 0; mips.pc < mips.proglen; mips.pc += 4) {
+    /*for (mips.pc = 0; mips.pc < mips.proglen; mips.pc += 4) {
         mips.ir = decode(mips.mem[mips.pc / 4]);
 
         if (mode != MODE_RUN) {
@@ -60,10 +62,12 @@ int main(int argc, char **argv) {
 
         if (mode == MODE_QUIT || step(&mips) == TERMINATE)
             break;
-    }
+    }*/
+
+    unsigned int clocks = 0;
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
-    for (halt = 0; !halt; clocks++) {
+    for (halt = 0, clocks = 0; !halt; clocks++) {
         decode(fetched, *instr);
         fetched = fetch(*mips);
     }
