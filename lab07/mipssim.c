@@ -330,6 +330,10 @@ void mem_dump(MIPS *mem, unsigned int proglen) {
     printf("------------------------------\n");
 }
 
+void fetch(MIPS pc) {
+    pc += 4;
+}
+
 void regfile_dump(MIPS *regfile) {
     int i;
 
