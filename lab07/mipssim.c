@@ -381,6 +381,221 @@ MIPS fetch(mipscontext *mc) {
     return fetched;
 }
 
+/*
+typedef struct _executed {
+    unsigned int ALU_res;
+    unsigned int pc;
+    unsigned int write_data;
+} executed;
+*/
+executed execute(decoded *decode_out) {
+    executed execute_out;
+
+    memset(&execute_out, 0, sizeof (executed));
+
+    int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
+
+    execute_out.pc_src = (signext_imm << 2) + decode_out->pc;
+
+    unsigned int out = 0;
+
+    switch (decode_out->type) {
+        case 'R':
+            switch (decode_out->funct) {
+                case 0x0:
+                    regfile[instr.rd] = regfile[instr.rt] << instr.shamt;
+                    break;
+                case 0x2:
+                    regfile[instr.rd] = regfile[instr.rt] >> instr.shamt;
+                    break;
+                case 0x3:
+                    regfile[instr.rd] = (int) regfile[instr.rt] >> instr.shamt;
+                    break;
+                case 0x4:
+                    regfile[instr.rd] = regfile[instr.rt] << regfile[instr.rs];
+                    break;
+                case 0x6:
+                    regfile[instr.rd] = regfile[instr.rt] >> regfile[instr.rs];
+                    break;
+                case 0x7:
+                    regfile[instr.rd] = (int) regfile[instr.rt]\
+                            >> regfile[instr.rs];
+                    break;
+                case 0x8:
+                    *pc = regfile[instr.rs];
+                    break;
+                case 0x9:
+                    *pc = regfile[instr.rs];
+                    regfile[31] = *pc + 4;
+                    break;
+                case 0x20:
+                    regfile[instr.rd] = (int) regfile[instr.rs]\
+                            + (int) regfile[instr.rt];
+                    break;
+                case 0x21:
+                    regfile[instr.rd] = regfile[instr.rs] + regfile[instr.rt];
+                    break;
+                case 0x22:
+                    regfile[instr.rd] = (int) regfile[instr.rs]\
+                            - (int) regfile[instr.rt];
+                    break;
+                case 0x23:
+                    regfile[instr.rd] = regfile[instr.rs] - regfile[instr.rt];
+                    break;
+                case 0x24:
+                    regfile[instr.rd] = regfile[instr.rs] & regfile[instr.rt];
+                    break;
+                case 0x25:
+                    regfile[instr.rd] = regfile[instr.rs] | regfile[instr.rt];
+                    break;
+                case 0x26:
+                    regfile[instr.rd] = regfile[instr.rs] ^ regfile[instr.rt];
+                    break;
+                case 0x27:
+                    regfile[instr.rd] = ~(regfile[instr.rs]\
+                            | regfile[instr.rt]);
+                    break;
+                case 0x2a:
+                    if ((int) regfile[instr.rs] < (int) regfile[instr.rt])
+                        regfile[instr.rd] = 1;
+                    else
+                        regfile[instr.rd] = 0;
+                    break;
+                case 0x2b:
+                    if (regfile[instr.rs] < regfile[instr.rt])
+                        regfile[instr.rd] = 1;
+                    else
+                        regfile[instr.rd] = 0;
+                    break;
+                case 0xc:
+                    if (regfile[2] == 10) {
+                        return TERMINATE;
+                    }
+
+                    break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+            }
+            break;
+        case 'I':
+            switch (instr.op) {
+                case 0x08:      // addi
+                    regfile[instr.rt] = (signed)regfile[instr.rs] + signext_imm;
+                break;
+                case 0x09:      // addiu
+                    regfile[instr.rt] = regfile[instr.rs] + instr.imm;
+                break;
+                case 0x0c:      // andi
+                    regfile[instr.rt] = regfile[instr.rs] & instr.imm;
+                break;
+                case 0x0d:      // ori
+                    regfile[instr.rt] = regfile[instr.rs] | instr.imm;
+                break;
+                case 0x0e:      // xori
+                    regfile[instr.rt] = regfile[instr.rs] ^ instr.imm;
+                break;
+                case 0x0a:      // slti
+                    regfile[instr.rt] = ((signed)regfile[instr.rs] < signext_imm) ? 1 : 0;
+                break;
+                case 0x0b:      // sltiu
+                    regfile[instr.rt] = (regfile[instr.rs] < instr.imm) ? 1 : 0;
+                break;
+                case 0x04:      // beq
+                    //*pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
+                break;
+                case 0x05:      // bne
+                    //*pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
+                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
+                break;
+                case 0x20:      // lb
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+
+                    // sign extend
+                    if (regfile[instr.rt] & 0x80) regfile[instr.rt] |= 0xffffff00;
+
+                    mips->readcount++;
+                break;
+                case 0x24:      // lbu
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+
+                    mips->readcount++;
+                break;
+                case 0x21:      // lh
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+
+                    // sign extend
+                    if (regfile[instr.rt] & 0x8000) regfile[instr.rt] |= 0xffff0000;
+
+                    mips->readcount++;
+                break;
+                case 0x25:      // lhu
+                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+
+                    mips->readcount++;
+                break;
+                case 0x0f:      // lui
+                    regfile[instr.rt] = instr.imm << 16;
+                break;
+                case 0x23:      // lw
+                    regfile[instr.rt] = mem[instr.rs + signext_imm];
+
+                    mips->readcount++;
+                break;
+                case 0x28:      // sb
+                    entry = &mem[regfile[instr.rs] + signext_imm];
+
+                    *entry &= 0xffffff00;
+                    *entry |= (regfile[instr.rt] & 0xff);
+
+                    mips->writecount++;
+                break;
+                case 0x29:      // sh
+                    entry = &mem[regfile[instr.rs] + signext_imm];
+
+                    *entry &= 0xffff0000;
+                    *entry |= (regfile[instr.rt] & 0xffff);
+
+                    mips->writecount++;
+                break;
+                case 0x2b:      // sw
+                    mem[regfile[instr.rs] + signext_imm] = regfile[instr.rt];
+
+                    mips->writecount++;
+                break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+                break;
+            }
+            break;
+        case 'J':
+            switch (instr.op) {
+                case 0x2:
+                    *pc = instr.wordind << 2;
+                    break;
+                case 0x3:
+                    regfile[31] = *pc + 4;
+                    *pc = instr.wordind << 2;
+                    break;
+                default:
+                    fprintf(stderr, "Invalid function\n");
+                    return 2;
+                    break;
+            }
+            break;
+        default:
+            fprintf(stderr, "Invalid type\n");
+            return 1;
+            break;
+    }
+
+    return (execute_out);
+}
+
 void mipscontext_display(mipscontext *mips) {
     printf("\n=== SUMMARY ===\n");
 

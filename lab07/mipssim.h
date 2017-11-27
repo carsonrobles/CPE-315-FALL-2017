@@ -31,7 +31,18 @@ typedef struct _decoded {
     unsigned int imm;           /* (I)       */
 
     unsigned int wordind;       /* (J)       */
+
+    unsigned int pc;
 } decoded;
+
+typedef struct _executed {
+    unsigned char branch;
+    unsigned int  pc_src;
+
+    unsigned int ALU_res;
+    unsigned int write_data;
+    unsigned char reg_dest;    // rt for imm
+} executed;
 
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {
@@ -52,6 +63,8 @@ int loadmem(mipscontext *mips, char *fn);
 
 void decode(MIPS bits, decoded *instr);
 int step(mipscontext *mips);
+
+executed execute(decoded *decode_in);
 
 void instruction_print(decoded instr);
 void mem_dump(mipscontext *mips);
