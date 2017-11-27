@@ -12,6 +12,10 @@
 
 #define TERMINATE 69
 
+#define MEM_NA 0
+#define MEM_RD 1
+#define MEM_WR 2
+
 /* structure to represent a MIPS instruction */
 typedef struct _decoded {
     char type;                  /* type of instruction: R, I, J */
@@ -22,7 +26,9 @@ typedef struct _decoded {
     unsigned char op;           /* (R, I, J) */
 
     unsigned char rs;           /* (R, I)    */
+    unsigned int rs_val;
     unsigned char rt;           /* (R, I)    */
+    unsigned int rt_val;
 
     unsigned char rd;           /* (R)       */
     unsigned char shamt;        /* (R)       */
@@ -36,12 +42,13 @@ typedef struct _decoded {
 } decoded;
 
 typedef struct _executed {
-    unsigned char branch;
+    unsigned char jmp;          /* non zero if PC is being set to pc_src */
     unsigned int  pc_src;
 
-    unsigned int ALU_res;
+    unsigned int alu_out;
     unsigned int write_data;
     unsigned char reg_dest;    // rt for imm
+    unsigned char access;       // memory access mode
 } executed;
 
 /* structure to represent MIPS runtime context */

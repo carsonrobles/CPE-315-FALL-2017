@@ -4,6 +4,8 @@
 
 #include "mipssim.h"
 
+extern int halt;
+
 int loadmem(mipscontext *mips, char *fn) {
     MB_HDR mb_hdr;    /* Header area */
     FILE *fd;
@@ -72,40 +74,59 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x0c);
 }
 
-instruction decode(MIPS bits) {
-    instruction instr;
+MIPS fetch(mipscontext *mc) {
+    MIPS fetched = mc->mem[mc->pc / 4];
+    mc->pc += 4;
+    return fetched;
+}
 
-    memset(&instr, 0, sizeof (instruction));
+void decode(MIPS bits, decoded *instr) {
+    memset(instr, 0, sizeof (decoded));
 
-    instr.data = bits;
-    instr.op   = (bits | 0) >> 26;
+    instr->data = bits;
+    instr->op   = (bits | 0) >> 26;
 
-    if (invalidop(instr.op)) {
-        instr.invalid = 1;
-    } else if (instr.op == 0x0) {
+    if (invalidop(instr->op)) {
+        instr->invalid = 1;
+    } else if (instr->op == 0x0) {
         // R
-        instr.type  = R_INSTR;
-        instr.rs    = (bits >> 21) & 0x1f;
-        instr.rt    = (bits >> 16) & 0x1f;
-        instr.rd    = (bits >> 11) & 0x1f;
-        instr.shamt = (bits >>  6) & 0x1f;
-        instr.funct =  bits        & 0x3f;
+        instr->type  = R_INSTR;
+        instr->rs    = (bits >> 21) & 0x1f;
+        instr->rs_val = regfile[instr->rs];
+        instr->rt    = (bits >> 16) & 0x1f;
+        instr->rt_val = regfile[instr->rt];
+        instr->rd    = (bits >> 11) & 0x1f;
+        instr->shamt = (bits >>  6) & 0x1f;
+        instr->funct =  bits        & 0x3f;
 
-        if (invalidfunct(instr.funct))
-            instr.invalid = 1;
-    } else if (instr.op == 0x2 || instr.op == 0x3) {
+        if (invalidfunct(instr->funct))
+            instr->invalid = 1;
+    } else if (instr->op == 0x2 || instr->op == 0x3) {
         // J
-        instr.type    = J_INSTR;
-        instr.wordind = bits & 0x3ffffff;
+        instr->type    = J_INSTR;
+        instr->wordind = bits & 0x3ffffff;
     } else {
         // I
-        instr.type = I_INSTR;
-        instr.rs = (bits >> 21) & 0x1f;
-        instr.rt = (bits >> 16) & 0x1f;
-        instr.imm = bits & 0xffff;
+        instr->type = I_INSTR;
+        instr->rs = regfile[(bits >> 21) & 0x1f];
+        instr->rt = regfile[(bits >> 16) & 0x1f];
+        instr->imm = bits & 0xffff;
     }
+}
 
-    return instr;
+void memory_access(MIPS *mem, executed *ex) {
+    switch (ex->mode) {
+        case READ:
+            break;
+        case WRITE:
+            mem[ex->address] = ex->data;
+            break;
+        case DONOT:
+            break;
+        default:
+            fprintf(stderr, "Invalid memory access mode\n");
+            break;
+    }
 }
 
 void instruction_print(instruction instr) {
@@ -150,220 +171,6 @@ void instruction_print(instruction instr) {
     }
 }
 
-//int step(instruction instr, MIPS *pc, MIPS *regfile, MIPS *mem) {
-int step(mipscontext *mips) {
-    MIPS *entry = NULL;
-
-    MIPS *pc      = &(mips->pc);
-    MIPS *regfile = mips->regfile;
-    MIPS *mem     = mips->mem;
-
-    instruction instr = mips->ir;
-
-    int signext_imm = (instr.imm & (1 << 15)) ? 0xffff0000 | instr.imm : instr.imm;
-
-    switch (instr.type) {
-        case 'R':
-            switch (instr.funct) {
-                case 0x0:
-                    regfile[instr.rd] = regfile[instr.rt] << instr.shamt;
-                    break;
-                case 0x2:
-                    regfile[instr.rd] = regfile[instr.rt] >> instr.shamt;
-                    break;
-                case 0x3:
-                    regfile[instr.rd] = (int) regfile[instr.rt] >> instr.shamt;
-                    break;
-                case 0x4:
-                    regfile[instr.rd] = regfile[instr.rt] << regfile[instr.rs];
-                    break;
-                case 0x6:
-                    regfile[instr.rd] = regfile[instr.rt] >> regfile[instr.rs];
-                    break;
-                case 0x7:
-                    regfile[instr.rd] = (int) regfile[instr.rt]\
-                            >> regfile[instr.rs];
-                    break;
-                case 0x8:
-                    *pc = regfile[instr.rs];
-                    break;
-                case 0x9:
-                    *pc = regfile[instr.rs];
-                    regfile[31] = *pc + 4;
-                    break;
-                case 0x20:
-                    regfile[instr.rd] = (int) regfile[instr.rs]\
-                            + (int) regfile[instr.rt];
-                    break;
-                case 0x21:
-                    regfile[instr.rd] = regfile[instr.rs] + regfile[instr.rt];
-                    break;
-                case 0x22:
-                    regfile[instr.rd] = (int) regfile[instr.rs]\
-                            - (int) regfile[instr.rt];
-                    break;
-                case 0x23:
-                    regfile[instr.rd] = regfile[instr.rs] - regfile[instr.rt];
-                    break;
-                case 0x24:
-                    regfile[instr.rd] = regfile[instr.rs] & regfile[instr.rt];
-                    break;
-                case 0x25:
-                    regfile[instr.rd] = regfile[instr.rs] | regfile[instr.rt];
-                    break;
-                case 0x26:
-                    regfile[instr.rd] = regfile[instr.rs] ^ regfile[instr.rt];
-                    break;
-                case 0x27:
-                    regfile[instr.rd] = ~(regfile[instr.rs]\
-                            | regfile[instr.rt]);
-                    break;
-                case 0x2a:
-                    if ((int) regfile[instr.rs] < (int) regfile[instr.rt])
-                        regfile[instr.rd] = 1;
-                    else
-                        regfile[instr.rd] = 0;
-                    break;
-                case 0x2b:
-                    if (regfile[instr.rs] < regfile[instr.rt])
-                        regfile[instr.rd] = 1;
-                    else
-                        regfile[instr.rd] = 0;
-                    break;
-                case 0xc:
-                    if (regfile[2] == 10) {
-                        return TERMINATE;
-                    }
-
-                    break;
-                default:
-                    fprintf(stderr, "Invalid function\n");
-                    return 2;
-                    break;
-            }
-            break;
-        case 'I':
-            switch (instr.op) {
-                case 0x08:      // addi
-                    regfile[instr.rt] = (signed)regfile[instr.rs] + signext_imm;
-                break;
-                case 0x09:      // addiu
-                    regfile[instr.rt] = regfile[instr.rs] + instr.imm;
-                break;
-                case 0x0c:      // andi
-                    regfile[instr.rt] = regfile[instr.rs] & instr.imm;
-                break;
-                case 0x0d:      // ori
-                    regfile[instr.rt] = regfile[instr.rs] | instr.imm;
-                break;
-                case 0x0e:      // xori
-                    regfile[instr.rt] = regfile[instr.rs] ^ instr.imm;
-                break;
-                case 0x0a:      // slti
-                    regfile[instr.rt] = ((signed)regfile[instr.rs] < signext_imm) ? 1 : 0;
-                break;
-                case 0x0b:      // sltiu
-                    regfile[instr.rt] = (regfile[instr.rs] < instr.imm) ? 1 : 0;
-                break;
-                case 0x04:      // beq
-                    //*pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
-                break;
-                case 0x05:      // bne
-                    //*pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
-                break;
-                case 0x20:      // lb
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
-
-                    // sign extend
-                    if (regfile[instr.rt] & 0x80) regfile[instr.rt] |= 0xffffff00;
-
-                    mips->readcount++;
-                break;
-                case 0x24:      // lbu
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
-
-                    mips->readcount++;
-                break;
-                case 0x21:      // lh
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
-
-                    // sign extend
-                    if (regfile[instr.rt] & 0x8000) regfile[instr.rt] |= 0xffff0000;
-
-                    mips->readcount++;
-                break;
-                case 0x25:      // lhu
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
-
-                    mips->readcount++;
-                break;
-                case 0x0f:      // lui
-                    regfile[instr.rt] = instr.imm << 16;
-                break;
-                case 0x23:      // lw
-                    regfile[instr.rt] = mem[instr.rs + signext_imm];
-
-                    mips->readcount++;
-                break;
-                case 0x28:      // sb
-                    entry = &mem[regfile[instr.rs] + signext_imm];
-
-                    *entry &= 0xffffff00;
-                    *entry |= (regfile[instr.rt] & 0xff);
-
-                    mips->writecount++;
-                break;
-                case 0x29:      // sh
-                    entry = &mem[regfile[instr.rs] + signext_imm];
-
-                    *entry &= 0xffff0000;
-                    *entry |= (regfile[instr.rt] & 0xffff);
-
-                    mips->writecount++;
-                break;
-                case 0x2b:      // sw
-                    mem[regfile[instr.rs] + signext_imm] = regfile[instr.rt];
-
-                    mips->writecount++;
-                break;
-                default:
-                    fprintf(stderr, "Invalid function\n");
-                    return 2;
-                    break;
-                break;
-            }
-            break;
-        case 'J':
-            switch (instr.op) {
-                case 0x2:
-                    *pc = instr.wordind << 2;
-                    break;
-                case 0x3:
-                    regfile[31] = *pc + 4;
-                    *pc = instr.wordind << 2;
-                    break;
-                default:
-                    fprintf(stderr, "Invalid function\n");
-                    return 2;
-                    break;
-            }
-            break;
-        default:
-            fprintf(stderr, "Invalid type\n");
-            return 1;
-            break;
-    }
-
-    mips->instrcount++;
-
-    /* set $zero back to 0 in case it was altered */
-    regfile[0] = 0;
-
-    return 0;
-}
-
 //void mem_dump(MIPS *mem, unsigned int proglen) {
 void mem_dump(mipscontext *mips) {
     int i;
@@ -393,203 +200,213 @@ executed execute(decoded *decode_out) {
 
     memset(&execute_out, 0, sizeof (executed));
 
+    execute_out.access = MEM_NA;
+
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
-
-    execute_out.pc_src = (signext_imm << 2) + decode_out->pc;
-
-    unsigned int out = 0;
 
     switch (decode_out->type) {
         case 'R':
             switch (decode_out->funct) {
                 case 0x0:
-                    regfile[instr.rd] = regfile[instr.rt] << instr.shamt;
+                    execute_out.alu_out = decode_out->rt_val << decode_out->shamt;
                     break;
                 case 0x2:
-                    regfile[instr.rd] = regfile[instr.rt] >> instr.shamt;
+                    execute_out.alu_out = decode_out->rt_val >> decode_out->shamt;
                     break;
                 case 0x3:
-                    regfile[instr.rd] = (int) regfile[instr.rt] >> instr.shamt;
+                    execute_out.alu_out = (int) decode_out->rt_val >> decode_out->shamt;
                     break;
                 case 0x4:
-                    regfile[instr.rd] = regfile[instr.rt] << regfile[instr.rs];
+                    execute_out.alu_out = decode_out->rt_val << decode_out->rs_val;
                     break;
                 case 0x6:
-                    regfile[instr.rd] = regfile[instr.rt] >> regfile[instr.rs];
+                    execute_out.alu_out = decode_out->rt_val >> decode_out->rs_val;
                     break;
                 case 0x7:
-                    regfile[instr.rd] = (int) regfile[instr.rt]\
-                            >> regfile[instr.rs];
+                    execute_out.alu_out = (int) decode_out->rt_val\
+                            >> decode_out->rs_val;
                     break;
                 case 0x8:
-                    *pc = regfile[instr.rs];
+                    execute_out.pc_src = decode_out->rs_val;
+                    execute_out.jmp    = 1;
                     break;
                 case 0x9:
-                    *pc = regfile[instr.rs];
-                    regfile[31] = *pc + 4;
+                    execute_out.pc_src   = decode_out->rs_val;
+                    execute_out.jmp      = 1;
+                    execute_out.alu_out  = decode_out->pc + 4;
+                    execute_out.reg_dest = 31;
                     break;
                 case 0x20:
-                    regfile[instr.rd] = (int) regfile[instr.rs]\
-                            + (int) regfile[instr.rt];
+                    execute_out.alu_out = (int) decode_out->rs_val\
+                            + (int) decode_out->rt_val;
                     break;
                 case 0x21:
-                    regfile[instr.rd] = regfile[instr.rs] + regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val + decode_out->rt_val;
                     break;
                 case 0x22:
-                    regfile[instr.rd] = (int) regfile[instr.rs]\
-                            - (int) regfile[instr.rt];
+                    execute_out.alu_out = (int) decode_out->rs_val\
+                            - (int) decode_out->rt_val;
                     break;
                 case 0x23:
-                    regfile[instr.rd] = regfile[instr.rs] - regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val - decode_out->rt_val;
                     break;
                 case 0x24:
-                    regfile[instr.rd] = regfile[instr.rs] & regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val & decode_out->rt_val;
                     break;
                 case 0x25:
-                    regfile[instr.rd] = regfile[instr.rs] | regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val | decode_out->rt_val;
                     break;
                 case 0x26:
-                    regfile[instr.rd] = regfile[instr.rs] ^ regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val ^ decode_out->rt_val;
                     break;
                 case 0x27:
-                    regfile[instr.rd] = ~(regfile[instr.rs]\
-                            | regfile[instr.rt]);
+                    execute_out.alu_out = ~(decode_out->rs_val\
+                            | decode_out->rt_val);
                     break;
                 case 0x2a:
-                    if ((int) regfile[instr.rs] < (int) regfile[instr.rt])
-                        regfile[instr.rd] = 1;
+                    if ((int) decode_out->rs_val < (int) decode_out->rt_val)
+                        execute_out.alu_out = 1;
                     else
-                        regfile[instr.rd] = 0;
+                        execute_out.alu_out = 0;
                     break;
                 case 0x2b:
-                    if (regfile[instr.rs] < regfile[instr.rt])
-                        regfile[instr.rd] = 1;
+                    if (decode_out->rs_val < decode_out->rt_val)
+                        execute_out.alu_out = 1;
                     else
-                        regfile[instr.rd] = 0;
+                        execute_out.alu_out = 0;
                     break;
                 case 0xc:
-                    if (regfile[2] == 10) {
-                        return TERMINATE;
+                    /* check this $v0 is RS? */
+                    //if (regfile[2] == 10) {
+                    if (decode_out->rs_val == 10) {
+                        halt = 1;
+                        //return TERMINATE;
                     }
 
                     break;
                 default:
                     fprintf(stderr, "Invalid function\n");
-                    return 2;
+                    memset(&execute_out, 0, sizeof (executed));
+
+                    return (execute_out);
                     break;
             }
             break;
         case 'I':
-            switch (instr.op) {
+            switch (decode_out->op) {
                 case 0x08:      // addi
-                    regfile[instr.rt] = (signed)regfile[instr.rs] + signext_imm;
+                    execute_out.alu_out = (signed)decode_out->rs_val + signext_imm;
                 break;
                 case 0x09:      // addiu
-                    regfile[instr.rt] = regfile[instr.rs] + instr.imm;
+                    execute_out.alu_out = decode_out->rs_val + decode_out->imm;
                 break;
                 case 0x0c:      // andi
-                    regfile[instr.rt] = regfile[instr.rs] & instr.imm;
+                    execute_out.alu_out = decode_out->rs_val & decode_out->imm;
                 break;
                 case 0x0d:      // ori
-                    regfile[instr.rt] = regfile[instr.rs] | instr.imm;
+                    execute_out.alu_out = decode_out->rs_val | decode_out->imm;
                 break;
                 case 0x0e:      // xori
-                    regfile[instr.rt] = regfile[instr.rs] ^ instr.imm;
+                    execute_out.alu_out = decode_out->rs_val ^ decode_out->imm;
                 break;
                 case 0x0a:      // slti
-                    regfile[instr.rt] = ((signed)regfile[instr.rs] < signext_imm) ? 1 : 0;
+                    execute_out.alu_out = ((signed)decode_out->rs_val < signext_imm) ? 1 : 0;
                 break;
                 case 0x0b:      // sltiu
-                    regfile[instr.rt] = (regfile[instr.rs] < instr.imm) ? 1 : 0;
+                    execute_out.alu_out = (decode_out->rs_val < decode_out->imm) ? 1 : 0;
                 break;
                 case 0x04:      // beq
                     //*pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    *pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
+                    execute_out.pc_src = (decode_out->rs_val == decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
+                    execute_out.jmp    = 1;
                 break;
                 case 0x05:      // bne
                     //*pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    *pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + (signext_imm << 2): *pc;
+                    execute_out.pc_src = (decode_out->rs_val != decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
+                    execute_out.jmp    = 1;
                 break;
                 case 0x20:      // lb
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+                    execute_out.alu_out = (decode_out->rs_val + signext_imm);
+                    execute_out.access  = MEM_RD;
 
-                    // sign extend
-                    if (regfile[instr.rt] & 0x80) regfile[instr.rt] |= 0xffffff00;
-
-                    mips->readcount++;
+                    //mips->readcount++;
                 break;
                 case 0x24:      // lbu
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xff;
+                    execute_out.alu_out = (decode_out->rs_val + signext_imm);
+                    execute_out.access  = MEM_RD;
 
-                    mips->readcount++;
+                    //mips->readcount++;
                 break;
                 case 0x21:      // lh
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+                    execute_out.alu_out = (decode_out->rs_val + signext_imm);
+                    execute_out.access  = MEM_RD;
 
-                    // sign extend
-                    if (regfile[instr.rt] & 0x8000) regfile[instr.rt] |= 0xffff0000;
-
-                    mips->readcount++;
+                    //mips->readcount++;
                 break;
                 case 0x25:      // lhu
-                    regfile[instr.rt] = mem[instr.rs + signext_imm] & 0xffff;
+                    execute_out.alu_out = (decode_out->rs_val + signext_imm);
+                    execute_out.access  = MEM_RD;
 
-                    mips->readcount++;
+                    //mips->readcount++;
                 break;
                 case 0x0f:      // lui
-                    regfile[instr.rt] = instr.imm << 16;
+                    execute_out.alu_out = decode_out->imm << 16;
                 break;
                 case 0x23:      // lw
-                    regfile[instr.rt] = mem[instr.rs + signext_imm];
+                    execute_out.alu_out = decode_out->rs_val + signext_imm;
+                    execute_out.access  = MEM_RD;
 
-                    mips->readcount++;
+                    //mips->readcount++;
                 break;
                 case 0x28:      // sb
-                    entry = &mem[regfile[instr.rs] + signext_imm];
+                    execute_out.alu_out = decode_out->rs_val + signext_imm;
+                    execute_out.access  = MEM_WR;
 
-                    *entry &= 0xffffff00;
-                    *entry |= (regfile[instr.rt] & 0xff);
-
-                    mips->writecount++;
+                    //mips->writecount++;
                 break;
                 case 0x29:      // sh
-                    entry = &mem[regfile[instr.rs] + signext_imm];
+                    execute_out.alu_out = decode_out->rs_val + signext_imm;
+                    execute_out.access  = MEM_WR;
 
-                    *entry &= 0xffff0000;
-                    *entry |= (regfile[instr.rt] & 0xffff);
-
-                    mips->writecount++;
+                    //mips->writecount++;
                 break;
                 case 0x2b:      // sw
-                    mem[regfile[instr.rs] + signext_imm] = regfile[instr.rt];
+                    execute_out.alu_out = decode_out->rs_val + signext_imm;
+                    execute_out.access  = MEM_WR;
 
-                    mips->writecount++;
+                    //mips->writecount++;
                 break;
                 default:
                     fprintf(stderr, "Invalid function\n");
-                    return 2;
+                    memset(&execute_out, 0, sizeof (executed));
+                    return (execute_out);
                     break;
                 break;
             }
             break;
         case 'J':
-            switch (instr.op) {
+            switch (decode_out->op) {
                 case 0x2:
-                    *pc = instr.wordind << 2;
+                    execute_out.pc_src = decode_out->wordind << 2;
+                    execute_out.jmp    = 1;
                     break;
                 case 0x3:
-                    regfile[31] = *pc + 4;
-                    *pc = instr.wordind << 2;
+                    execute_out.pc_src   = decode_out->wordind << 2;
+                    execute_out.alu_out  = decode_out->pc + 4;
+                    execute_out.jmp      = 1;
+                    execute_out.reg_dest = 31;
                     break;
                 default:
                     fprintf(stderr, "Invalid function\n");
-                    return 2;
+                    memset(&execute_out, 0, sizeof (executed));
+                    return (execute_out);
                     break;
             }
             break;
         default:
             fprintf(stderr, "Invalid type\n");
-            return 1;
+            memset(&execute_out, 0, sizeof (executed));
+            return (execute_out);
             break;
     }
 
