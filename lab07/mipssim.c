@@ -115,7 +115,7 @@ void decode(MIPS bits, decoded *instr) {
 }
 
 void memory_access(MIPS *mem, executed *ex) {
-    switch (ex->mode) {
+    switch (ex->access) {
         case READ:
             break;
         case WRITE:
@@ -216,7 +216,8 @@ executed execute(decoded *decode_out) {
 
     memset(&execute_out, 0, sizeof (executed));
 
-    execute_out.access = MEM_NA;
+    execute_out.access     = MEM_NA;
+    execute_out.write_data = decode_out->rs_val;
 
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
 

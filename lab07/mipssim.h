@@ -45,8 +45,8 @@ typedef struct _executed {
     unsigned char jmp;          /* non zero if PC is being set to pc_src */
     unsigned int  pc_src;
 
-    unsigned int alu_out;
-    unsigned int write_data;
+    unsigned int  alu_out;
+    unsigned int  write_data;
     unsigned char reg_dest;    // rt for imm
     unsigned char access;       // memory access mode
 } executed;
