@@ -12,7 +12,7 @@
 #define MODE_QUIT  3
 #define MODE_INV  -1
 
-int prompt(void) {
+static int prompt(void) {
     char inp[MAX_INPUT_SIZE];
 
     while (1) {
@@ -36,43 +36,31 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    /* declare mips resources */
-    MIPS mem[MIPS_MEM_SIZE];            // memory
-    MIPS regfile[MIPS_REGFILE_SIZE];    // register file
-    MIPS pc;                            // program counter
-    instruction ir;                     // instruction register
+    mipscontext mips;
 
-    /* initialize mips resources */
-    memset(mem, 0, MIPS_MEM_SIZE * sizeof (MIPS));
-    memset(regfile, 0, MIPS_REGFILE_SIZE * sizeof(MIPS));
-
-    pc = 0;
-
-    int proglen = loadmem(mem, argv[1]);
+    memset(&mips, 0, sizeof (mipscontext));
 
     /* check for invalid input file */
-    if (proglen < 0)
+    if (loadmem(&mips, argv[1]) < 0)
         exit(EXIT_FAILURE);
 
-    mem_dump(mem, (unsigned int)proglen);
+    mem_dump(&mips);
 
     int mode = MODE_INV;
 
-    for (pc = 0; pc < proglen; pc += 4) {   /* i contains byte offset addresses */
-        ir = decode(mem[pc / 4]);           // fetch and decode
+    for (mips.pc = 0; mips.pc < mips.proglen; mips.pc += 4) {
+        mips.ir = decode(mips.mem[mips.pc / 4]);
 
-        instruction_print(ir);
-
-        if (mode != MODE_RUN)
+        if (mode != MODE_RUN) {
+            mipscontext_display(&mips);
             mode = prompt();
+        }
 
-        if (mode == MODE_QUIT)
+        if (mode == MODE_QUIT || step(&mips) == TERMINATE)
             break;
-
-        step(ir, &pc, regfile, mem);
     }
 
-    regfile_dump(regfile);
+    mipscontext_display(&mips);
 
     return 0;
 }
