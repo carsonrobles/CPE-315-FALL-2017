@@ -12,9 +12,9 @@
 
 #define TERMINATE 69
 
-#define MEM_NA 0
-#define MEM_RD 1
-#define MEM_WR 2
+#define READ  1
+#define WRITE 2
+#define DONOT 3
 
 /* structure to represent a MIPS instruction */
 typedef struct _decoded {
@@ -50,6 +50,12 @@ typedef struct _executed {
     unsigned char reg_dest;    // rt for imm
     unsigned char access;       // memory access mode
 } executed;
+
+typedef struct _memmed {
+    unsigned char mode;
+    unsigned char dest;
+    unsigned int data;
+} memmed;
 
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {

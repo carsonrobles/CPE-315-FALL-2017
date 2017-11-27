@@ -114,9 +114,11 @@ void decode(MIPS bits, decoded *instr) {
     }
 }
 
-void memory_access(MIPS *mem, executed *ex) {
+void memory_access(MIPS *mem, executed *ex, memmed *m) {
     switch (ex->access) {
         case READ:
+            m->dest = ex->dest;
+            m->data = mem[ex->addr];
             break;
         case WRITE:
             mem[ex->address] = ex->data;
@@ -136,7 +138,6 @@ void writeback(MIPS *regfile, memmed *m) {
             regfile[m->dest] = m->data;
             break;
         case DONOT:
-            return;
             break;
         default:
             fprintf(stderr, "Invalid writeback mode\n");
