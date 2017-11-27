@@ -45,8 +45,8 @@ typedef struct _executed {
     unsigned char jmp;          /* non zero if PC is being set to pc_src */
     unsigned int  pc_src;
 
-    unsigned int alu_out;
-    unsigned int write_data;
+    unsigned int  alu_out;
+    unsigned int  write_data;
     unsigned char reg_dest;    // rt for imm
     unsigned char access;       // memory access mode
 } executed;
@@ -74,7 +74,8 @@ typedef struct _mipscontext {
 
 int loadmem(mipscontext *mips, char *fn);
 
-void decode(MIPS bits, decoded *instr);
+MIPS fetch(mipscontext *mc);
+void decode(MIPS bits, decoded *instr, MIPS *regfile);
 int step(mipscontext *mips);
 
 executed execute(decoded *decode_in);
