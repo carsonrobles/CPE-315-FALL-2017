@@ -199,12 +199,6 @@ void mem_dump(mipscontext *mips) {
     }
 }
 
-MIPS fetch(mipscontext *mc) {
-    MIPS fetched = mc->mem[mc->pc / 4];
-    pc += 4;
-    return fetched;
-}
-
 /*
 typedef struct _executed {
     unsigned int ALU_res;
