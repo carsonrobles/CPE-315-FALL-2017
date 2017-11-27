@@ -12,6 +12,10 @@
 
 #define TERMINATE 69
 
+#define READ  1
+#define WRITE 2
+#define DONOT 3
+
 /* structure to represent a MIPS instruction */
 typedef struct _decoded {
     char type;                  /* type of instruction: R, I, J */
@@ -34,6 +38,12 @@ typedef struct _decoded {
 
     unsigned int wordind;       /* (J)       */
 } decoded;
+
+typedef struct _memmed {
+    unsigned char mode;
+    unsigned char dest;
+    unsigned int data;
+} memmed;
 
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {
