@@ -375,6 +375,12 @@ void mem_dump(mipscontext *mips) {
     }
 }
 
+MIPS fetch(mipscontext *mc) {
+    MIPS fetched = mc->mem[mc->pc / 4];
+    pc += 4;
+    return fetched;
+}
+
 void mipscontext_display(mipscontext *mips) {
     printf("\n=== SUMMARY ===\n");
 

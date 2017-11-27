@@ -37,8 +37,10 @@ int main(int argc, char **argv) {
     }
 
     mipscontext mips;
-
     memset(&mips, 0, sizeof (mipscontext));
+
+    MIPS fetched;
+    decoded instr;
 
     /* check for invalid input file */
     if (loadmem(&mips, argv[1]) < 0)
@@ -58,6 +60,12 @@ int main(int argc, char **argv) {
 
         if (mode == MODE_QUIT || step(&mips) == TERMINATE)
             break;
+    }
+
+    /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
+    for (halt = 0; !halt; clocks++) {
+        /* decode goes here */
+        fetched = fetch(*mips);
     }
 
     mipscontext_display(&mips);

@@ -13,7 +13,7 @@
 #define TERMINATE 69
 
 /* structure to represent a MIPS instruction */
-typedef struct _instruction {
+typedef struct _decoded {
     char type;                  /* type of instruction: R, I, J */
 
     unsigned int  data;
@@ -31,7 +31,7 @@ typedef struct _instruction {
     unsigned int imm;           /* (I)       */
 
     unsigned int wordind;       /* (J)       */
-} instruction;
+} decoded;
 
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {
@@ -45,15 +45,15 @@ typedef struct _mipscontext {
     MIPS mem[MIPS_MEM_SIZE];            // memory
     MIPS regfile[MIPS_REGFILE_SIZE];    // register file
     MIPS pc;                            // program counter
-    instruction ir;                     // instruction register
+    decoded ir;                     // instruction register
 } mipscontext;
 
 int loadmem(mipscontext *mips, char *fn);
 
-instruction decode(MIPS bits);
+void decode(MIPS bits, decoded *instr);
 int step(mipscontext *mips);
 
-void instruction_print(instruction instr);
+void instruction_print(decoded instr);
 void mem_dump(mipscontext *mips);
 void regfile_dump(mipscontext *mips);
 void mipscontext_display(mipscontext *mips);
