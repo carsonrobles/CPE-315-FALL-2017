@@ -72,9 +72,13 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x0c);
 }
 
-instruction decode(MIPS bits) {
-    instruction instr;
+MIPS fetch(mipscontext *mc) {
+    MIPS fetched = mc->mem[mc->pc / 4];
+    pc += 4;
+    return fetched;
+}
 
+void decode(MIPS bits, decoded *instr) {
     memset(&instr, 0, sizeof (instruction));
 
     instr.data = bits;
@@ -85,9 +89,9 @@ instruction decode(MIPS bits) {
     } else if (instr.op == 0x0) {
         // R
         instr.type  = R_INSTR;
-        instr.rs    = (bits >> 21) & 0x1f;
-        instr.rt    = (bits >> 16) & 0x1f;
-        instr.rd    = (bits >> 11) & 0x1f;
+        instr.rs    = regfile[(bits >> 21) & 0x1f];
+        instr.rt    = regfile[(bits >> 16) & 0x1f];
+        instr.rd    = regfile[(bits >> 11) & 0x1f];
         instr.shamt = (bits >>  6) & 0x1f;
         instr.funct =  bits        & 0x3f;
 
@@ -100,12 +104,25 @@ instruction decode(MIPS bits) {
     } else {
         // I
         instr.type = I_INSTR;
-        instr.rs = (bits >> 21) & 0x1f;
-        instr.rt = (bits >> 16) & 0x1f;
+        instr.rs = regfile[(bits >> 21) & 0x1f];
+        instr.rt = regfile[(bits >> 16) & 0x1f];
         instr.imm = bits & 0xffff;
     }
+}
 
-    return instr;
+void memory_access(MIPS *mem, executed *ex) {
+    switch (ex->mode) {
+        case READ:
+            break;
+        case WRITE:
+            mem[ex->address] = ex->data;
+            break;
+        case DONOT:
+            break;
+        default:
+            fprintf(stderr, "Invalid memory access mode\n");
+            break;
+    }
 }
 
 void instruction_print(instruction instr) {
@@ -373,12 +390,6 @@ void mem_dump(mipscontext *mips) {
     for (i = 0; i < mips->proglen; i += 4) { /* i contains byte offset addresses */
         printf("Instruction@%08X : %08X\n", i, mips->mem[i / 4]);
     }
-}
-
-MIPS fetch(mipscontext *mc) {
-    MIPS fetched = mc->mem[mc->pc / 4];
-    pc += 4;
-    return fetched;
 }
 
 void mipscontext_display(mipscontext *mips) {
