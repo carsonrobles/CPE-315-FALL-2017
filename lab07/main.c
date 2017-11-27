@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0, clocks = 0; !halt; clocks++) {
-        decode(fetched, *instr);
-        fetched = fetch(*mips);
+        decode(fetched, &instr, mips.regfile);
+        fetched = fetch(&mips);
     }
 
     mipscontext_display(&mips);

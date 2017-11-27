@@ -73,14 +73,13 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x2b && funct != 0x08 && funct != 0x09 && \
             funct != 0x0c);
 }
-
 MIPS fetch(mipscontext *mc) {
     MIPS fetched = mc->mem[mc->pc / 4];
     mc->pc += 4;
     return fetched;
 }
 
-void decode(MIPS bits, decoded *instr) {
+void decode(MIPS bits, decoded *instr, MIPS *regfile) {
     memset(instr, 0, sizeof (decoded));
 
     instr->data = bits;
@@ -117,11 +116,11 @@ void decode(MIPS bits, decoded *instr) {
 void memory_access(MIPS *mem, executed *ex, memmed *m) {
     switch (ex->access) {
         case READ:
-            m->dest = ex->dest;
-            m->data = mem[ex->addr];
+            m->dest = ex->reg_dest;
+            m->data = mem[ex->alu_out];
             break;
         case WRITE:
-            mem[ex->address] = ex->data;
+            mem[ex->alu_out] = ex->write_data;
             break;
         case DONOT:
             break;
@@ -146,7 +145,7 @@ void writeback(MIPS *regfile, memmed *m) {
     }
 }
 
-void instruction_print(instruction instr) {
+void instruction_print(decoded instr) {
     if (instr.invalid) {
         printf("invalid instruction: 0x%08x\n", instr.data);
 
@@ -199,12 +198,6 @@ void mem_dump(mipscontext *mips) {
     }
 }
 
-MIPS fetch(mipscontext *mc) {
-    MIPS fetched = mc->mem[mc->pc / 4];
-    pc += 4;
-    return fetched;
-}
-
 /*
 typedef struct _executed {
     unsigned int ALU_res;
@@ -217,7 +210,7 @@ executed execute(decoded *decode_out) {
 
     memset(&execute_out, 0, sizeof (executed));
 
-    execute_out.access     = MEM_NA;
+    execute_out.access     = DONOT;
     execute_out.write_data = decode_out->rs_val;
 
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
@@ -345,25 +338,25 @@ executed execute(decoded *decode_out) {
                 break;
                 case 0x20:      // lb
                     execute_out.alu_out = (decode_out->rs_val + signext_imm);
-                    execute_out.access  = MEM_RD;
+                    execute_out.access  = READ;
 
                     //mips->readcount++;
                 break;
                 case 0x24:      // lbu
                     execute_out.alu_out = (decode_out->rs_val + signext_imm);
-                    execute_out.access  = MEM_RD;
+                    execute_out.access  = READ;
 
                     //mips->readcount++;
                 break;
                 case 0x21:      // lh
                     execute_out.alu_out = (decode_out->rs_val + signext_imm);
-                    execute_out.access  = MEM_RD;
+                    execute_out.access  = READ;
 
                     //mips->readcount++;
                 break;
                 case 0x25:      // lhu
                     execute_out.alu_out = (decode_out->rs_val + signext_imm);
-                    execute_out.access  = MEM_RD;
+                    execute_out.access  = READ;
 
                     //mips->readcount++;
                 break;
@@ -372,25 +365,25 @@ executed execute(decoded *decode_out) {
                 break;
                 case 0x23:      // lw
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
-                    execute_out.access  = MEM_RD;
+                    execute_out.access  = READ;
 
                     //mips->readcount++;
                 break;
                 case 0x28:      // sb
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
-                    execute_out.access  = MEM_WR;
+                    execute_out.access  = WRITE;
 
                     //mips->writecount++;
                 break;
                 case 0x29:      // sh
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
-                    execute_out.access  = MEM_WR;
+                    execute_out.access  = WRITE;
 
                     //mips->writecount++;
                 break;
                 case 0x2b:      // sw
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
-                    execute_out.access  = MEM_WR;
+                    execute_out.access  = WRITE;
 
                     //mips->writecount++;
                 break;

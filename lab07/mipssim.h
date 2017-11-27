@@ -74,7 +74,8 @@ typedef struct _mipscontext {
 
 int loadmem(mipscontext *mips, char *fn);
 
-void decode(MIPS bits, decoded *instr);
+MIPS fetch(mipscontext *mc);
+void decode(MIPS bits, decoded *instr, MIPS *regfile);
 int step(mipscontext *mips);
 
 executed execute(decoded *decode_in);
