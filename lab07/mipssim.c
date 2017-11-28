@@ -132,6 +132,7 @@ memmed memory_access(mipscontext *mips, executed *ex) {
 
     if (ex->jmp) {
         mips->pc = ex->pc_src;
+        return mem_out;
     }
 
     switch (ex->access) {
