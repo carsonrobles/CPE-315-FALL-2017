@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 
 
         writeback(mips.regfile, &mem_out);
-        mem_out = memory_access(mips.mem, &execute_out);
+        mem_out = memory_access(&mips, &execute_out);
         execute_out = execute(&instr);
         instr = decode(fetched, mips.regfile);
         fetched = fetch(&mips);

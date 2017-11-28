@@ -79,7 +79,7 @@ int loadmem(mipscontext *mips, char *fn);
 MIPS fetch(mipscontext *mc);
 decoded decode(MIPS bits, MIPS *regfile);
 executed execute(decoded *decode_in);
-memmed memory_access(MIPS *mem, executed *ex);
+memmed memory_access(mipscontext *mips, executed *ex);
 void writeback(MIPS *regfile, memmed *m);
 
 int step(mipscontext *mips);

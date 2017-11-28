@@ -123,19 +123,23 @@ decoded decode(MIPS bits, MIPS *regfile) {
     return instr;
 }
 
-memmed memory_access(MIPS *mem, executed *ex) {
+memmed memory_access(mipscontext *mips, executed *ex) {
     memmed mem_out;
     memset(&mem_out, 0, sizeof(memmed));
 
     mem_out.wb_mode = ex->wb_mode;
     mem_out.dest = ex->reg_dest;
 
+    if (ex->jmp) {
+        mips->pc = ex->pc_src;
+    }
+
     switch (ex->access) {
         case READ:
-            mem_out.data = mem[ex->alu_out];
+            mem_out.data = mips->mem[ex->alu_out];
             break;
         case WRITE:
-            mem[ex->alu_out] = ex->write_data;
+            mips->mem[ex->alu_out] = ex->write_data;
             break;
         case DONOT:
             mem_out.data = ex->alu_out;
