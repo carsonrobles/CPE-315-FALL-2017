@@ -14,7 +14,7 @@
 
 #define READ  1
 #define WRITE 2
-#define DONOT 3
+#define DONOT 0
 
 /* structure to represent a MIPS instruction */
 typedef struct _decoded {

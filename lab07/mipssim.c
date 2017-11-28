@@ -229,11 +229,14 @@ executed execute(decoded *decode_out) {
     execute_out.access     = DONOT;
     execute_out.write_data = decode_out->rs_val;
     execute_out.wb_mode    = DONOT;
+    execute_out.wb_mode    = WRITE;
 
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
 
     switch (decode_out->type) {
         case 'R':
+            execute_out.reg_dest = decode_out->rd;
+
             switch (decode_out->funct) {
                 case 0x0:
                     execute_out.alu_out = decode_out->rt_val << decode_out->shamt;
@@ -251,12 +254,11 @@ executed execute(decoded *decode_out) {
                     execute_out.alu_out = decode_out->rt_val >> decode_out->rs_val;
                     break;
                 case 0x7:
-                    execute_out.alu_out = (int) decode_out->rt_val\
-                            >> decode_out->rs_val;
+                    execute_out.alu_out = (int) decode_out->rt_val >> decode_out->rs_val;
                     break;
                 case 0x8:
-                    execute_out.pc_src = decode_out->rs_val;
-                    execute_out.jmp    = 1;
+                    execute_out.pc_src  = decode_out->rs_val;
+                    execute_out.jmp     = 1;
                     break;
                 case 0x9:
                     execute_out.pc_src   = decode_out->rs_val;
@@ -265,15 +267,13 @@ executed execute(decoded *decode_out) {
                     execute_out.reg_dest = 31;
                     break;
                 case 0x20:
-                    execute_out.alu_out = (int) decode_out->rs_val\
-                            + (int) decode_out->rt_val;
+                    execute_out.alu_out = (int) decode_out->rs_val + (int) decode_out->rt_val;
                     break;
                 case 0x21:
                     execute_out.alu_out = decode_out->rs_val + decode_out->rt_val;
                     break;
                 case 0x22:
-                    execute_out.alu_out = (int) decode_out->rs_val\
-                            - (int) decode_out->rt_val;
+                    execute_out.alu_out = (int) decode_out->rs_val - (int) decode_out->rt_val;
                     break;
                 case 0x23:
                     execute_out.alu_out = decode_out->rs_val - decode_out->rt_val;
@@ -288,8 +288,7 @@ executed execute(decoded *decode_out) {
                     execute_out.alu_out = decode_out->rs_val ^ decode_out->rt_val;
                     break;
                 case 0x27:
-                    execute_out.alu_out = ~(decode_out->rs_val\
-                            | decode_out->rt_val);
+                    execute_out.alu_out = ~(decode_out->rs_val | decode_out->rt_val);
                     break;
                 case 0x2a:
                     if ((int) decode_out->rs_val < (int) decode_out->rt_val)
@@ -302,8 +301,10 @@ executed execute(decoded *decode_out) {
                         execute_out.alu_out = 1;
                     else
                         execute_out.alu_out = 0;
+
                     break;
                 case 0xc:
+                    execute_out.wb_mode = DONOT;
                     /* check this $v0 is RS? */
                     //if (regfile[2] == 10) {
                     if (decode_out->rs_val == 10) {
@@ -313,6 +314,7 @@ executed execute(decoded *decode_out) {
 
                     break;
                 default:
+                    execute_out.wb_mode = DONOT;
                     fprintf(stderr, "Invalid function\n");
                     memset(&execute_out, 0, sizeof (executed));
 
@@ -321,6 +323,8 @@ executed execute(decoded *decode_out) {
             }
             break;
         case 'I':
+            execute_out.reg_dest = decode_out->rt;
+
             switch (decode_out->op) {
                 case 0x08:      // addi
                     execute_out.alu_out = (signed)decode_out->rs_val + signext_imm;
@@ -345,13 +349,15 @@ executed execute(decoded *decode_out) {
                 break;
                 case 0x04:      // beq
                     //*pc = (regfile[instr.rs] == regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    execute_out.pc_src = (decode_out->rs_val == decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
-                    execute_out.jmp    = 1;
+                    execute_out.wb_mode = DONOT;
+                    execute_out.pc_src  = (decode_out->rs_val == decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
+                    execute_out.jmp     = 1;
                 break;
                 case 0x05:      // bne
                     //*pc = (regfile[instr.rs] != regfile[instr.rt]) ? *pc + 4 + (instr.imm << 2): *pc;
-                    execute_out.pc_src = (decode_out->rs_val != decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
-                    execute_out.jmp    = 1;
+                    execute_out.wb_mode = DONOT;
+                    execute_out.pc_src  = (decode_out->rs_val != decode_out->rt_val) ? decode_out->pc + (signext_imm << 2): decode_out->pc;
+                    execute_out.jmp     = 1;
                 break;
                 case 0x20:      // lb
                     execute_out.alu_out = (decode_out->rs_val + signext_imm);
@@ -389,22 +395,26 @@ executed execute(decoded *decode_out) {
                 case 0x28:      // sb
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
                     execute_out.access  = WRITE;
+                    execute_out.wb_mode = DONOT;
 
                     //mips->writecount++;
                 break;
                 case 0x29:      // sh
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
                     execute_out.access  = WRITE;
+                    execute_out.wb_mode = DONOT;
 
                     //mips->writecount++;
                 break;
                 case 0x2b:      // sw
                     execute_out.alu_out = decode_out->rs_val + signext_imm;
                     execute_out.access  = WRITE;
+                    execute_out.wb_mode = DONOT;
 
                     //mips->writecount++;
                 break;
                 default:
+                    execute_out.wb_mode = DONOT;
                     fprintf(stderr, "Invalid function\n");
                     memset(&execute_out, 0, sizeof (executed));
                     return (execute_out);
@@ -421,10 +431,12 @@ executed execute(decoded *decode_out) {
                 case 0x3:
                     execute_out.pc_src   = decode_out->wordind << 2;
                     execute_out.alu_out  = decode_out->pc + 4;
+                    execute_out.wb_mode  = DONOT;
                     execute_out.jmp      = 1;
                     execute_out.reg_dest = 31;
                     break;
                 default:
+                    execute_out.wb_mode = DONOT;
                     fprintf(stderr, "Invalid function\n");
                     memset(&execute_out, 0, sizeof (executed));
                     return (execute_out);
