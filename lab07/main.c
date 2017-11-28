@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
     MIPS fetched;
     decoded instr;
 
+    memset(&instr, 0, sizeof (decoded));
+
     /* check for invalid input file */
     if (loadmem(&mips, argv[1]) < 0)
         exit(EXIT_FAILURE);
@@ -64,12 +66,18 @@ int main(int argc, char **argv) {
             break;
     }*/
 
+    executed exe;
+
+    memset(&exe, 0, sizeof (executed));
+
     unsigned int clocks = 0;
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0, clocks = 0; !halt; clocks++) {
+        //exe = execute(&instr);
         decode(fetched, &instr, mips.regfile);
         fetched = fetch(&mips);
+        getchar();
     }
 
     mipscontext_display(&mips);
