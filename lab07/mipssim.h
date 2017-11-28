@@ -59,6 +59,11 @@ typedef struct _memmed {
     unsigned int data;
 } memmed;
 
+typedef struct _fetched {
+    MIPS bits;
+    MIPS pc;
+} fetched;
+
 /* structure to represent MIPS runtime context */
 typedef struct _mipscontext {
     unsigned int memoffset;
@@ -76,8 +81,8 @@ typedef struct _mipscontext {
 
 int loadmem(mipscontext *mips, char *fn);
 
-MIPS fetch(mipscontext *mc);
-decoded decode(MIPS bits, MIPS *regfile);
+fetched fetch(mipscontext *mc);
+decoded decode(fetched *fetch_out, MIPS *regfile);
 executed execute(decoded *decode_in);
 memmed memory_access(mipscontext *mips, executed *ex);
 void writeback(MIPS *regfile, memmed *m);
