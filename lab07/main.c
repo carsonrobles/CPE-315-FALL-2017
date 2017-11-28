@@ -43,8 +43,13 @@ int main(int argc, char **argv) {
 
     MIPS fetched;
     decoded instr;
+    executed execute_out;
+    memmed mem_out;
 
+    memset(&fetched, 0, sizeof (MIPS));
     memset(&instr, 0, sizeof (decoded));
+    memset(&execute_out, 0, sizeof (executed));
+    memset(&mem_out, 0, sizeof (memmed));
 
     /* check for invalid input file */
     if (loadmem(&mips, argv[1]) < 0)
@@ -66,16 +71,15 @@ int main(int argc, char **argv) {
             break;
     }*/
 
-    executed exe;
-
-    memset(&exe, 0, sizeof (executed));
-
     unsigned int clocks = 0;
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0, clocks = 0; !halt; clocks++) {
-        //exe = execute(&instr);
-        decode(fetched, &instr, mips.regfile);
+        writeback(mips.regfile, &mem_out);
+        mem_out = memory_access(mips.mem, &execute_out);
+        /* execute goes here */
+        execute_out = execute(&instr);
+        instr = decode(fetched, mips.regfile);
         fetched = fetch(&mips);
         getchar();
     }

@@ -81,49 +81,57 @@ MIPS fetch(mipscontext *mc) {
     return fetched;
 }
 
-void decode(MIPS bits, decoded *instr, MIPS *regfile) {
-    memset(instr, 0, sizeof (decoded));
+decoded decode(MIPS bits, MIPS *regfile) {
+    decoded instr;
+    memset(&instr, 0, sizeof (decoded));
 
-    instr->data = bits;
-    instr->op   = bits >> 26;
+    instr.data = bits;
+    instr.op   = bits >> 26;
 
-    if (invalidop(instr->op)) {
-        instr->invalid = 1;
-    } else if (instr->op == 0x0) {
+    if (invalidop(instr.op)) {
+        instr.invalid = 1;
+    } else if (instr.op == 0x0) {
         // R
-        instr->type  = R_INSTR;
-        instr->rs    = (bits >> 21) & 0x1f;
-        instr->rs_val = regfile[instr->rs];
-        instr->rt    = (bits >> 16) & 0x1f;
-        instr->rt_val = regfile[instr->rt];
-        instr->rd    = (bits >> 11) & 0x1f;
-        instr->shamt = (bits >>  6) & 0x1f;
-        instr->funct =  bits        & 0x3f;
+        instr.type  = R_INSTR;
+        instr.rs    = (bits >> 21) & 0x1f;
+        instr.rs_val = regfile[instr.rs];
+        instr.rt    = (bits >> 16) & 0x1f;
+        instr.rt_val = regfile[instr.rt];
+        instr.rd    = (bits >> 11) & 0x1f;
+        instr.shamt = (bits >>  6) & 0x1f;
+        instr.funct =  bits        & 0x3f;
 
-        if (invalidfunct(instr->funct))
-            instr->invalid = 1;
-    } else if (instr->op == 0x2 || instr->op == 0x3) {
+        if (invalidfunct(instr.funct))
+            instr.invalid = 1;
+    } else if (instr.op == 0x2 || instr.op == 0x3) {
         // J
-        instr->type    = J_INSTR;
-        instr->wordind = bits & 0x3ffffff;
+        instr.type    = J_INSTR;
+        instr.wordind = bits & 0x3ffffff;
     } else {
         // I
-        instr->type   = I_INSTR;
-        instr->rs     = (bits >> 21) & 0x1f;
-        instr->rs_val = regfile[(bits >> 21) & 0x1f];
-        instr->rt     = (bits >> 16) & 0x1f;
-        instr->rt_val = regfile[(bits >> 16) & 0x1f];
-        instr->imm    = bits & 0xffff;
+        instr.type   = I_INSTR;
+        instr.rs     = (bits >> 21) & 0x1f;
+        instr.rs_val = regfile[(bits >> 21) & 0x1f];
+        instr.rt     = (bits >> 16) & 0x1f;
+        instr.rt_val = regfile[(bits >> 16) & 0x1f];
+        instr.imm    = bits & 0xffff;
     }
 
-    instruction_print(*instr);
+    instruction_print(instr);
+
+    return instr;
 }
 
-void memory_access(MIPS *mem, executed *ex, memmed *m) {
+memmed memory_access(MIPS *mem, executed *ex) {
+    memmed mem_out;
+    memset(&mem_out, 0, sizeof(memmed));
+
+    mem_out.wb_mode = ex->wb_mode;
+
     switch (ex->access) {
         case READ:
-            m->dest = ex->reg_dest;
-            m->data = mem[ex->alu_out];
+            mem_out.dest = ex->reg_dest;
+            mem_out.data = mem[ex->alu_out];
             break;
         case WRITE:
             mem[ex->alu_out] = ex->write_data;
@@ -135,10 +143,12 @@ void memory_access(MIPS *mem, executed *ex, memmed *m) {
             exit(EXIT_FAILURE);
             break;
     }
+
+    return mem_out;
 }
 
 void writeback(MIPS *regfile, memmed *m) {
-    switch(m->mode) {
+    switch(m->wb_mode) {
         case WRITE:
             regfile[m->dest] = m->data;
             break;
@@ -218,6 +228,7 @@ executed execute(decoded *decode_out) {
 
     execute_out.access     = DONOT;
     execute_out.write_data = decode_out->rs_val;
+    execute_out.wb_mode    = DONOT;
 
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
 
