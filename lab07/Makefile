@@ -7,7 +7,8 @@ OBJ = $(SRC:.c=.o)
 EXE = a.out
 
 ASM  = /home/dretz/Share/mips_asm
-TSRC = $(wildcard test/*.s)
+TDIR = test
+TSRC = $(wildcard $(TDIR)/*.s)
 TOUT = $(TSRC:.s=.mb)
 
 .PHONY: all

@@ -102,6 +102,8 @@ decoded decode(MIPS bits, MIPS *regfile) {
 
         if (invalidfunct(instr.funct))
             instr.invalid = 1;
+        else if (instr.funct == 0xc)
+            instr.rs_val = regfile[2];
     } else if (instr.op == 0x2 || instr.op == 0x3) {
         // J
         instr.type    = J_INSTR;
