@@ -52,7 +52,7 @@ typedef struct _executed {
 } executed;
 
 typedef struct _memmed {
-    unsigned char mode;
+    unsigned char wb_mode;
     unsigned char dest;
     unsigned int data;
 } memmed;
@@ -75,7 +75,7 @@ typedef struct _mipscontext {
 int loadmem(mipscontext *mips, char *fn);
 
 MIPS fetch(mipscontext *mc);
-void decode(MIPS bits, decoded *instr, MIPS *regfile);
+decoded decode(MIPS bits, MIPS *regfile);
 int step(mipscontext *mips);
 
 executed execute(decoded *decode_in);
