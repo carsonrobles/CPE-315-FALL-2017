@@ -77,7 +77,6 @@ MIPS fetch(mipscontext *mc) {
     fprintf(stderr, "PC: 0x%08x\n", mc->pc);
     MIPS fetched = mc->mem[mc->pc / 4];
     mc->pc += 4;
-    fprintf(stderr, "mem[PC]: 0x%08x\n", fetched);
     return fetched;
 }
 
@@ -127,16 +126,17 @@ memmed memory_access(MIPS *mem, executed *ex) {
     memset(&mem_out, 0, sizeof(memmed));
 
     mem_out.wb_mode = ex->wb_mode;
+    mem_out.dest = ex->reg_dest;
 
     switch (ex->access) {
         case READ:
-            mem_out.dest = ex->reg_dest;
             mem_out.data = mem[ex->alu_out];
             break;
         case WRITE:
             mem[ex->alu_out] = ex->write_data;
             break;
         case DONOT:
+            mem_out.data = ex->alu_out;
             break;
         default:
             fprintf(stderr, "Invalid memory access mode\n");
@@ -150,6 +150,8 @@ memmed memory_access(MIPS *mem, executed *ex) {
 void writeback(MIPS *regfile, memmed *m) {
     switch(m->wb_mode) {
         case WRITE:
+    printf("\n\nWRITEBACK MODE %d DATA %d TO DEST %d\n\n", m->wb_mode, m->data, m->dest);
+
             regfile[m->dest] = m->data;
             break;
         case DONOT:
@@ -449,6 +451,8 @@ executed execute(decoded *decode_out) {
             return (execute_out);
             break;
     }
+
+    printf("%c: dest:%x wb:%x alu:%x jmp:%d pc:%x\n", decode_out->type, execute_out.reg_dest, execute_out.wb_mode, execute_out.alu_out, execute_out.jmp, execute_out.pc_src);
 
     return (execute_out);
 }
