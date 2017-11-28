@@ -49,6 +49,8 @@ typedef struct _executed {
     unsigned int  write_data;
     unsigned char reg_dest;    // rt for imm
     unsigned char access;       // memory access mode
+
+    unsigned char wb_mode;
 } executed;
 
 typedef struct _memmed {
@@ -76,9 +78,12 @@ int loadmem(mipscontext *mips, char *fn);
 
 MIPS fetch(mipscontext *mc);
 decoded decode(MIPS bits, MIPS *regfile);
+executed execute(decoded *decode_in);
+memmed memory_access(MIPS *mem, executed *ex);
+void writeback(MIPS *regfile, memmed *m);
+
 int step(mipscontext *mips);
 
-executed execute(decoded *decode_in);
 
 void instruction_print(decoded instr);
 void mem_dump(mipscontext *mips);

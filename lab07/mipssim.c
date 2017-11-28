@@ -74,8 +74,10 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x0c);
 }
 MIPS fetch(mipscontext *mc) {
+    fprintf(stderr, "PC: 0x%08x\n", mc->pc);
     MIPS fetched = mc->mem[mc->pc / 4];
     mc->pc += 4;
+    fprintf(stderr, "mem[PC]: 0x%08x\n", fetched);
     return fetched;
 }
 
@@ -84,7 +86,7 @@ decoded decode(MIPS bits, MIPS *regfile) {
     memset(&instr, 0, sizeof (decoded));
 
     instr.data = bits;
-    instr.op   = (bits | 0) >> 26;
+    instr.op   = bits >> 26;
 
     if (invalidop(instr.op)) {
         instr.invalid = 1;
@@ -107,11 +109,15 @@ decoded decode(MIPS bits, MIPS *regfile) {
         instr.wordind = bits & 0x3ffffff;
     } else {
         // I
-        instr.type = I_INSTR;
-        instr.rs = regfile[(bits >> 21) & 0x1f];
-        instr.rt = regfile[(bits >> 16) & 0x1f];
-        instr.imm = bits & 0xffff;
+        instr.type   = I_INSTR;
+        instr.rs     = (bits >> 21) & 0x1f;
+        instr.rs_val = regfile[(bits >> 21) & 0x1f];
+        instr.rt     = (bits >> 16) & 0x1f;
+        instr.rt_val = regfile[(bits >> 16) & 0x1f];
+        instr.imm    = bits & 0xffff;
     }
+
+    instruction_print(instr);
 
     return instr;
 }
@@ -222,6 +228,7 @@ executed execute(decoded *decode_out) {
 
     execute_out.access     = DONOT;
     execute_out.write_data = decode_out->rs_val;
+    execute_out.wb_mode    = DONOT;
 
     int signext_imm = (decode_out->imm & (1 << 15)) ? 0xffff0000 | decode_out->imm : decode_out->imm;
 
