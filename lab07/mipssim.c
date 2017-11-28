@@ -116,7 +116,7 @@ decoded decode(MIPS bits, MIPS *regfile) {
     return instr;
 }
 
-void memory_access(MIPS *mem, executed *ex) {
+memmed memory_access(MIPS *mem, executed *ex) {
     memmed mem_out;
     memset(&mem_out, 0, sizeof(memmed));
 
@@ -142,7 +142,7 @@ void memory_access(MIPS *mem, executed *ex) {
 }
 
 void writeback(MIPS *regfile, memmed *m) {
-    switch(m->mode) {
+    switch(m->wb_mode) {
         case WRITE:
             regfile[m->dest] = m->data;
             break;
