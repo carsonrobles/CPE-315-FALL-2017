@@ -75,28 +75,19 @@ int main(int argc, char **argv) {
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0, clocks = 0; !halt; clocks++) {
-    int i;
-
-    for (i = 0; i < MIPS_REGFILE_SIZE; i++) {
-        if (i % 4 == 0)
-            printf("\n");
-        else
-            printf("\t");
-
-        printf("%d:\t0x%08x", i, mips.regfile[i]);
-    }
-
-
-
-
-
-
         writeback(mips.regfile, &mem_out);
         mem_out = memory_access(&mips, &execute_out);
         execute_out = execute(&instr);
         instr = decode(&fetch_out, mips.regfile);
         fetch_out = fetch(&mips);
-        getchar();
+
+        if (mode != MODE_RUN) {
+            mipscontext_display(&mips);
+            mode = prompt();
+        }
+
+        if (mode == MODE_QUIT)
+            halt = 1;
     }
 
     mipscontext_display(&mips);
