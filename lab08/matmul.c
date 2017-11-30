@@ -8,33 +8,30 @@
 #define AMAX 10         /* Maximum (square) array size */
 #define CACHESIM 0      /* Set to 1 if simulating Cache */
 
-/* statistics to be generated for cache--set to 0 */
-stats s;
-memset(&stat, 0, sizeof(s));
 
-cache_ref(int *mp) {
+void access_cache(int *mp, cache_t *c) {
     cache_idx i;
 
     uintptr_t address = (uintptr_t) mp;
-    if (size == 16)
+    if (c->cachesize == 16)
         i.index = address & 0xf;    /* index = four lowest order bits */
-    else    /* otherwise, size = 256 */
+    else    /* otherwise, cache size = 256 */
         i.index = address & 0xff;
 
-
+    
 }
 
 /* This function gets called with each "read" reference to memory */
-mem_read(int *mp) {
-    /* printf("Memory read from location %p\n", mp);    */
-
+void mem_read(int *mp, stats *s) {
+    /* printf("Memory read from location %p\n", mp); */
+    s->reads++;
 }
 
 /* This function gets called with each "write" reference to memory */
-mem_write(int *mp) {
+void mem_write(int *mp, stats *s) {
 
     /* printf("Memory write to location %p\n", mp); */
-
+    s->writes++;
 }
 
 /* Statically define the arrays a, b, and mult, where mult will become the
@@ -74,6 +71,11 @@ void matmul(r1, c1, c2) {
 
 int main() {
     int r1, c1, r2, c2, i, j, k, *mp1, *mp2, *mp3;
+
+    /* statistics to be generated for cache--set to 0 */
+    stats s;
+    memset(&s, 0, sizeof(s));
+
 
     printf("Size of pointer is: %d\n\n", sizeof(mp1));
 

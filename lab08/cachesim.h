@@ -10,6 +10,13 @@ typedef struct {
     unsigned int size;
 } stats;
 
+typedef unsigned int block[4];
+typedef struct {
+    unsigned int cachesize;
+    unsigned int blocksize;
+    block cache[256];
+} cache_t;
+
 typedef struct {
     unsigned int index;
     unsigned int tag;
