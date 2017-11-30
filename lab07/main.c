@@ -41,12 +41,12 @@ int main(int argc, char **argv) {
     mipscontext mips;
     memset(&mips, 0, sizeof (mipscontext));
 
-    MIPS fetched;
+    fetched fetch_out;
     decoded instr;
     executed execute_out;
     memmed mem_out;
 
-    memset(&fetched, 0, sizeof (MIPS));
+    memset(&fetch_out, 0, sizeof (fetched));
     memset(&instr, 0, sizeof (decoded));
     memset(&execute_out, 0, sizeof (executed));
     memset(&mem_out, 0, sizeof (memmed));
@@ -75,28 +75,19 @@ int main(int argc, char **argv) {
 
     /* USING RETZ'S EXAMPLE STRUCTURE... CHANGE LATER */
     for (halt = 0, clocks = 0; !halt; clocks++) {
-    int i;
-
-    for (i = 0; i < MIPS_REGFILE_SIZE; i++) {
-        if (i % 4 == 0)
-            printf("\n");
-        else
-            printf("\t");
-
-        printf("%d:\t0x%08x", i, mips.regfile[i]);
-    }
-
-
-
-
-
-
         writeback(mips.regfile, &mem_out);
         mem_out = memory_access(&mips, &execute_out);
         execute_out = execute(&instr);
-        instr = decode(fetched, mips.regfile);
-        fetched = fetch(&mips);
-        getchar();
+        instr = decode(&fetch_out, mips.regfile);
+        fetch_out = fetch(&mips);
+
+        if (mode != MODE_RUN) {
+            mipscontext_display(&mips);
+            mode = prompt();
+        }
+
+        if (mode == MODE_QUIT)
+            halt = 1;
     }
 
     mipscontext_display(&mips);

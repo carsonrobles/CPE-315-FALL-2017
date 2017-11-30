@@ -73,32 +73,39 @@ static int invalidfunct(unsigned char funct) {
             funct != 0x2b && funct != 0x08 && funct != 0x09 && \
             funct != 0x0c);
 }
-MIPS fetch(mipscontext *mc) {
+
+fetched fetch(mipscontext *mc) {
+    fetched f;
+
     fprintf(stderr, "PC: 0x%08x\n", mc->pc);
-    MIPS fetched = mc->mem[mc->pc / 4];
+    f.bits = mc->mem[mc->pc / 4];
+    f.pc   = mc->pc;
     mc->pc += 4;
-    return fetched;
+
+    return f;
 }
 
-decoded decode(MIPS bits, MIPS *regfile) {
+decoded decode(fetched *fetch_out, MIPS *regfile) {
     decoded instr;
     memset(&instr, 0, sizeof (decoded));
 
-    instr.data = bits;
-    instr.op   = bits >> 26;
+    instr.pc = fetch_out->pc;
+
+    instr.data = fetch_out->bits;
+    instr.op   = fetch_out->bits >> 26;
 
     if (invalidop(instr.op)) {
         instr.invalid = 1;
     } else if (instr.op == 0x0) {
         // R
         instr.type  = R_INSTR;
-        instr.rs    = (bits >> 21) & 0x1f;
+        instr.rs    = (fetch_out->bits >> 21) & 0x1f;
         instr.rs_val = regfile[instr.rs];
-        instr.rt    = (bits >> 16) & 0x1f;
+        instr.rt    = (fetch_out->bits >> 16) & 0x1f;
         instr.rt_val = regfile[instr.rt];
-        instr.rd    = (bits >> 11) & 0x1f;
-        instr.shamt = (bits >>  6) & 0x1f;
-        instr.funct =  bits        & 0x3f;
+        instr.rd    = (fetch_out->bits >> 11) & 0x1f;
+        instr.shamt = (fetch_out->bits >>  6) & 0x1f;
+        instr.funct =  fetch_out->bits        & 0x3f;
 
         if (invalidfunct(instr.funct))
             instr.invalid = 1;
@@ -107,15 +114,15 @@ decoded decode(MIPS bits, MIPS *regfile) {
     } else if (instr.op == 0x2 || instr.op == 0x3) {
         // J
         instr.type    = J_INSTR;
-        instr.wordind = bits & 0x3ffffff;
+        instr.wordind = fetch_out->bits & 0x3ffffff;
     } else {
         // I
         instr.type   = I_INSTR;
-        instr.rs     = (bits >> 21) & 0x1f;
-        instr.rs_val = regfile[(bits >> 21) & 0x1f];
-        instr.rt     = (bits >> 16) & 0x1f;
-        instr.rt_val = regfile[(bits >> 16) & 0x1f];
-        instr.imm    = bits & 0xffff;
+        instr.rs     = (fetch_out->bits >> 21) & 0x1f;
+        instr.rs_val = regfile[(fetch_out->bits >> 21) & 0x1f];
+        instr.rt     = (fetch_out->bits >> 16) & 0x1f;
+        instr.rt_val = regfile[(fetch_out->bits >> 16) & 0x1f];
+        instr.imm    = fetch_out->bits & 0xffff;
     }
 
     instruction_print(instr);
@@ -434,15 +441,16 @@ executed execute(decoded *decode_out) {
         case 'J':
             switch (decode_out->op) {
                 case 0x2:
-                    execute_out.pc_src = decode_out->wordind << 2;
-                    execute_out.jmp    = 1;
+                    execute_out.pc_src  = decode_out->wordind << 2;
+                    execute_out.jmp     = 1;
+                    execute_out.wb_mode = DONOT;
                     break;
                 case 0x3:
                     execute_out.pc_src   = decode_out->wordind << 2;
                     execute_out.alu_out  = decode_out->pc + 4;
-                    execute_out.wb_mode  = DONOT;
                     execute_out.jmp      = 1;
                     execute_out.reg_dest = 31;
+                    printf("JAL\n\n\n\n************* %x\n\n\n\n", execute_out.pc_src);
                     break;
                 default:
                     execute_out.wb_mode = DONOT;
