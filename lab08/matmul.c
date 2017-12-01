@@ -26,13 +26,12 @@ void access_cache(int *mp, cache_t *c) {
     else    /* otherwise, cache size = 256 */
         index = address & 0xff;
 
-    if ((tag = tagsearch(address, c->blocksize, &c->cache[index])) == -1) {
+    if ((tag = tag_search(&c->cache[index], c->blocksize, address)) == -1) {
         c->stats.misses++;
         c->cache[index].lines[c->cache[index].next_in].data = *mp;
-        c->next_in = (c->cache[index].next_in + 1) % c->blocksize;
+        c->cache[index].next_in = (c->cache[index].next_in + 1) % c->blocksize;
     } else {
         c->stats.hits++;
-        
     }
 }
 
@@ -87,21 +86,34 @@ void matmul(r1, c1, c2) {
 int main() {
     int r1, c1, r2, c2, i, j, k, *mp1, *mp2, *mp3;
 
-    /* statistics to be generated for cache--set to 0 */
     cache_t c;
     memset(&c, 0, sizeof(cache_t));
 
     printf("Cache size (16 | 256): ");
     scanf("%u", &c.cachesize);
+    while (c.cachesize != 16 && c.cachesize != 256) {
+        printf("Invalid cache size\n");
+        printf("Cache size (16 | 256): ");
+        scanf("%u", &c.cachesize);
+    }
     printf("Accociativity (1 | 2 | 4): ");
     scanf("%u", &c.blocksize);
+    while (c.blocksize != 1 && c.blocksize != 2 && c.blocksize != 4) {
+        printf("Invalid block size\n");
+        printf("Associativity (1 | 2 | 4): ");
+        scanf("%u", &c.blocksize);
+    }
 
     printf("Size of pointer is: %d\n\n", sizeof(mp1));
 
-    printf("Enter rows and column for first matrix: ");
-    scanf("%d%d", &r1, &c1);
-    printf("Enter rows and column for second matrix: ");
-    scanf("%d%d",&r2, &c2);
+    printf("Enter number of rows first matrix: ");
+    scanf("%u", &r1);
+    printf("Enter number of columns for first matrix: ");
+    scanf("%u", &c1);
+    printf("Enter number of rows for second matrix: ");
+    scanf("%u",&r2);
+    printf("Enter number of columns for second matrix: ");
+    scanf("%u", &c2);
 
     /* If column of first matrix in not equal to row of second matrix, asking
      * user to enter the size of matrix again. */
