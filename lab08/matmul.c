@@ -8,17 +8,32 @@
 #define AMAX 10         /* Maximum (square) array size */
 #define CACHESIM 0      /* Set to 1 if simulating Cache */
 
+unsigned int tag_search(block *b, unsigned int blocksize, unsigned int tag) {
+    int i;
+    for (l = 0; l < b->blocksize; l++) {
+        if (b->lines[l].tag == tag)
+            return l;
+    }
+    return -1;
+}
 
 void access_cache(int *mp, cache_t *c) {
-    cache_idx i;
-
     uintptr_t address = (uintptr_t) mp;
+    unsigned int tag;
+
     if (c->cachesize == 16)
         i.index = address & 0xf;    /* index = four lowest order bits */
     else    /* otherwise, cache size = 256 */
         i.index = address & 0xff;
 
-    
+    if ((tag = tagsearch(address, &c->cache[index])) == -1) {
+        c->stats.misses++;
+        c->cache[c->next_in] = *mp;
+        c->next_in = (next_in + 1) % c->blocksize;
+    } else {
+        c->stats.hit++;
+        
+    }
 }
 
 /* This function gets called with each "read" reference to memory */
@@ -75,7 +90,13 @@ int main() {
     /* statistics to be generated for cache--set to 0 */
     stats s;
     memset(&s, 0, sizeof(s));
+    cache_t c;
+    memset(&c, 0, sizeof(cache_t));
 
+    printf("Cache size (16 | 256): ");
+    scanf("%u", &c.cachesize);
+    printf("Accociativity (1 | 2 | 4): ");
+    scanf("%u", &c.blocksize);
 
     printf("Size of pointer is: %d\n\n", sizeof(mp1));
 
@@ -98,8 +119,8 @@ int main() {
     printf("\nEnter elements of matrix 1:\n");
     for(i=0; i<r1; ++i)
         for(j=0; j<c1; ++j) {
-            /* printf("Enter elements a%d%d: ",i+1,j+1);
-             * scanf("%d",&a[i][j]); */
+            printf("Enter elements a%d%d: ",i+1,j+1);
+            scanf("%d",&a[i][j]);
             a[i][j] = i+j; // build sample data
         }
 
@@ -107,8 +128,8 @@ int main() {
     printf("\nEnter elements of matrix 2:\n");
     for(i=0; i<r2; ++i)
         for(j=0; j<c2; ++j) {
-            /* printf("Enter elements b%d%d: ",i+1,j+1);
-             * scanf("%d",&b[i][j]); */
+            printf("Enter elements b%d%d: ",i+1,j+1);
+            scanf("%d",&b[i][j]);
             b[i][j] = 10 + i + j;
         }
 
