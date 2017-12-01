@@ -29,7 +29,6 @@ void access_cache(int *mp, cache_t *c) {
 
     if (tag_search(&c->cache[index], c->blocksize, address) == -1) {
         c->stats.misses++;
-        c->cache[index].lines[c->cache[index].next_in].data = *mp;
         c->cache[index].lines[c->cache[index].next_in].tag = address;
         c->cache[index].next_in = (c->cache[index].next_in + 1) % c->blocksize;
     } else {
@@ -126,7 +125,7 @@ int main() {
     scanf("%u", &c2);
 
     /* Storing elements of first matrix. */
-    printf("\nEnter elements of matrix A:\n");
+    /* printf("\nEnter elements of matrix A:\n"); */
     for(i=0; i<r1; ++i)
         for(j=0; j<c1; ++j) {
             /* printf("-\tEnter element A[%d, %d]: ",i+1,j+1);
@@ -135,7 +134,7 @@ int main() {
         }
 
 /* Storing elements of second matrix. */
-    printf("\nEnter elements of matrix B:\n");
+    /* printf("\nEnter elements of matrix B:\n"); */
     for(i=0; i<r2; ++i)
         for(j=0; j<c2; ++j) {
             /* printf("-\tEnter element B[%d, %d]: ",i+1,j+1);
