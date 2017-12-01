@@ -72,7 +72,6 @@ void matmul(cache_t *c, r1, c1, c2) {
 
                 #if CACHESIM        /* "Hooks" to measure memory references - enabled if CACHESIM  */
                 mp1 = &mult[i][j];
-<<<<<<< HEAD
                 mp2 = &a[i][k];
                 mp3 = &b[k][j];     
                 mem_read(mp1, c);
@@ -80,15 +79,6 @@ void matmul(cache_t *c, r1, c1, c2) {
                 mem_read(mp3, c);
                 mem_write(mp1, c); 
                 #endif
-=======
-    mp2 = &a[i][k];
-    mp3 = &b[k][j];     
-    mem_read(mp1, cache);
-    mem_read(mp2, cache);
-    mem_read(mp3, cache);
-    mem_write(mp1, cache); 
-#endif
->>>>>>> a1822d8632892126f5d26942129157a27e304ffb
 
                 mult[i][j]+=a[i][k]*b[k][j];
 
