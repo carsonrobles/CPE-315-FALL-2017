@@ -7,7 +7,7 @@
 #include "cachesim.h"
 
 #define AMAX 10         /* Maximum (square) array size */
-#define CACHESIM 0      /* Set to 1 if simulating Cache */
+#define CACHESIM 1      /* Set to 1 if simulating Cache */
 
 unsigned int tag_search(block_t *b, unsigned int blocksize, unsigned int tag) {
     int l;
@@ -54,7 +54,7 @@ void mem_write(int *mp, cache_t *c) {
  * cross product of a and b, i.e., a x b. */
 static int a[AMAX][AMAX], b[AMAX][AMAX], mult[AMAX][AMAX];
 
-void matmul(r1, c1, c2) {
+void matmul(int r1, int c1, int c2, cache_t *cache) {
     int i, j, k;
     int *mp1, *mp2, *mp3;
 
@@ -74,10 +74,10 @@ void matmul(r1, c1, c2) {
                 mp1 = &mult[i][j];
     mp2 = &a[i][k];
     mp3 = &b[k][j];     
-    mem_read(mp1);
-    mem_read(mp2);
-    mem_read(mp3);
-    mem_write(mp1); 
+    mem_read(mp1, cache);
+    mem_read(mp2, cache);
+    mem_read(mp3, cache);
+    mem_write(mp1, cache); 
 #endif
 
                 mult[i][j]+=a[i][k]*b[k][j];
@@ -105,7 +105,7 @@ int main() {
         scanf("%u", &c.blocksize);
     }
 
-    printf("\nSize of pointer: %d\n\n", sizeof(mp1));
+    printf("\nSize of pointer: %lu\n\n", sizeof(mp1));
 
     printf("Enter number of rows first matrix: ");
     scanf("%u", &r1);
@@ -148,7 +148,7 @@ int main() {
             b[i][j] = 10 + i + j;
         }
 
-    matmul(r1, c1, c2);        /* Invoke matrix multiply function */ 
+    matmul(r1, c1, c2, &c);        /* Invoke matrix multiply function */ 
 
     /* Displaying the multiplication of two matrix. */
     printf("\nOutput Matrix:\n");
