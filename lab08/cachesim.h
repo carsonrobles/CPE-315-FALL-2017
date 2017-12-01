@@ -7,19 +7,23 @@ typedef struct {
     unsigned int reads;
     unsigned int writes;
     unsigned int assoc;
-    unsigned int size;
-} stats;
+} stat_t;
 
-typedef unsigned int block[4];
+typedef struct {
+    unsigned int tag;
+    unsigned int data;
+} line;
+
+typedef line block[8];
+
 typedef struct {
     unsigned int cachesize;
     unsigned int blocksize;
+    unsigned int next_in;
+    state_t stats;
     block cache[256];
 } cache_t;
 
-typedef struct {
-    unsigned int index;
-    unsigned int tag;
-} cache_idx;
+
 
 #endif
