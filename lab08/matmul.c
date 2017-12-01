@@ -8,10 +8,10 @@
 #define AMAX 10         /* Maximum (square) array size */
 #define CACHESIM 0      /* Set to 1 if simulating Cache */
 
-unsigned int tag_search(block *b, unsigned int blocksize, unsigned int tag) {
+unsigned int tag_search(block_t *b, unsigned int blocksize, unsigned int tag) {
     int l;
     for (l = 0; l < blocksize; l++) {
-        if (b[l].tag == tag)
+        if (b->lines[l].tag == tag)
             return l;
     }
     return -1;
@@ -26,10 +26,10 @@ void access_cache(int *mp, cache_t *c) {
     else    /* otherwise, cache size = 256 */
         index = address & 0xff;
 
-    if ((tag = tagsearch(address, &c->cache[index])) == -1) {
+    if ((tag = tagsearch(address, c->blocksize, &c->cache[index])) == -1) {
         c->stats.misses++;
-        c->cache[c->next_in][tag] = *mp;
-        c->next_in = (c->next_in + 1) % c->blocksize;
+        c->cache[index].lines[c->cache[index].next_in].data = *mp;
+        c->next_in = (c->cache[index].next_in + 1) % c->blocksize;
     } else {
         c->stats.hits++;
         
@@ -39,14 +39,14 @@ void access_cache(int *mp, cache_t *c) {
 /* This function gets called with each "read" reference to memory */
 void mem_read(int *mp, cache_t *c) {
     /* printf("Memory read from location %p\n", mp); */
-    c->stats->reads++;
+    c->stats.reads++;
 }
 
 /* This function gets called with each "write" reference to memory */
 void mem_write(int *mp, cache_t *c) {
 
     /* printf("Memory write to location %p\n", mp); */
-    c->stats->writes++;
+    c->stats.writes++;
 }
 
 /* Statically define the arrays a, b, and mult, where mult will become the
