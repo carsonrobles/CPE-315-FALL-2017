@@ -1,6 +1,9 @@
 #ifndef CACHESIM_H
 #define CACHESIM_H
 
+#define MAX_CACHE 256
+#define MAX_ASSOC 8
+
 typedef struct {
     unsigned int hits;
     unsigned int misses;
@@ -12,16 +15,19 @@ typedef struct {
 typedef struct {
     unsigned int tag;
     int data;
-} line;
+} line_t;
 
-typedef line block[8];
+typedef struct {
+    unsigned int next_in;
+    line_t lines[MAX_ASSOC];
+} block_t;
 
 typedef struct {
     unsigned int cachesize;
     unsigned int blocksize;
     unsigned int next_in;
     stat_t stats;
-    block cache[256];
+    block_t cache[MAX_CACHE];
 } cache_t;
 
 
