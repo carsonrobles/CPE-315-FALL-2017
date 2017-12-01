@@ -9,9 +9,9 @@
 #define CACHESIM 0      /* Set to 1 if simulating Cache */
 
 unsigned int tag_search(block *b, unsigned int blocksize, unsigned int tag) {
-    int i;
-    for (l = 0; l < b->blocksize; l++) {
-        if (b->lines[l].tag == tag)
+    int l;
+    for (l = 0; l < blocksize; l++) {
+        if (b[l].tag == tag)
             return l;
     }
     return -1;
@@ -19,34 +19,34 @@ unsigned int tag_search(block *b, unsigned int blocksize, unsigned int tag) {
 
 void access_cache(int *mp, cache_t *c) {
     uintptr_t address = (uintptr_t) mp;
-    unsigned int tag;
+    unsigned int index, tag;
 
     if (c->cachesize == 16)
-        i.index = address & 0xf;    /* index = four lowest order bits */
+        index = address & 0xf;    /* index = four lowest order bits */
     else    /* otherwise, cache size = 256 */
-        i.index = address & 0xff;
+        index = address & 0xff;
 
     if ((tag = tagsearch(address, &c->cache[index])) == -1) {
         c->stats.misses++;
-        c->cache[c->next_in] = *mp;
-        c->next_in = (next_in + 1) % c->blocksize;
+        c->cache[c->next_in][tag] = *mp;
+        c->next_in = (c->next_in + 1) % c->blocksize;
     } else {
-        c->stats.hit++;
+        c->stats.hits++;
         
     }
 }
 
 /* This function gets called with each "read" reference to memory */
-void mem_read(int *mp, stats *s) {
+void mem_read(int *mp, cache_t *c) {
     /* printf("Memory read from location %p\n", mp); */
-    s->reads++;
+    c->stats->reads++;
 }
 
 /* This function gets called with each "write" reference to memory */
-void mem_write(int *mp, stats *s) {
+void mem_write(int *mp, cache_t *c) {
 
     /* printf("Memory write to location %p\n", mp); */
-    s->writes++;
+    c->stats->writes++;
 }
 
 /* Statically define the arrays a, b, and mult, where mult will become the
@@ -88,8 +88,6 @@ int main() {
     int r1, c1, r2, c2, i, j, k, *mp1, *mp2, *mp3;
 
     /* statistics to be generated for cache--set to 0 */
-    stats s;
-    memset(&s, 0, sizeof(s));
     cache_t c;
     memset(&c, 0, sizeof(cache_t));
 

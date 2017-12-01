@@ -11,7 +11,7 @@ typedef struct {
 
 typedef struct {
     unsigned int tag;
-    unsigned int data;
+    int data;
 } line;
 
 typedef line block[8];
@@ -20,7 +20,7 @@ typedef struct {
     unsigned int cachesize;
     unsigned int blocksize;
     unsigned int next_in;
-    state_t stats;
+    stat_t stats;
     block cache[256];
 } cache_t;
 
