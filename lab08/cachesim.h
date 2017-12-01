@@ -9,12 +9,11 @@ typedef struct {
     unsigned int misses;
     unsigned int reads;
     unsigned int writes;
-    unsigned int assoc;
 } stat_t;
 
 typedef struct {
     unsigned int tag;
-    int data;
+    unsigned int data;
 } line_t;
 
 typedef struct {
@@ -25,11 +24,8 @@ typedef struct {
 typedef struct {
     unsigned int cachesize;
     unsigned int blocksize;
-    unsigned int next_in;
     stat_t stats;
     block_t cache[MAX_CACHE];
 } cache_t;
-
-
 
 #endif
