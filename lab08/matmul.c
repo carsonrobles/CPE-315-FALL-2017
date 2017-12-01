@@ -2,6 +2,7 @@
  * Dane Mortensen and Carson Robles */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include "cachesim.h"
 
@@ -104,7 +105,7 @@ int main() {
         scanf("%u", &c.blocksize);
     }
 
-    printf("Size of pointer is: %d\n\n", sizeof(mp1));
+    printf("Size of pointer is: %lu\n\n", sizeof(mp1));
 
     printf("Enter number of rows first matrix: ");
     scanf("%u", &r1);
