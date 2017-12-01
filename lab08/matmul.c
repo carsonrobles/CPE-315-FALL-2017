@@ -143,11 +143,7 @@ int main() {
             b[i][j] = 10 + i + j;
         }
 
-<<<<<<< HEAD
     matmul(&c, r1, c1, c2);        /* Invoke matrix multiply function */ 
-=======
-    matmul(r1, c1, c2, &c);        /* Invoke matrix multiply function */ 
->>>>>>> a1822d8632892126f5d26942129157a27e304ffb
 
     /* Displaying the multiplication of two matrix. */
     printf("\nOutput Matrix:\n");
