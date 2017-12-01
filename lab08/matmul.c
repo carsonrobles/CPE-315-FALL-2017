@@ -129,8 +129,8 @@ int main() {
     printf("\nEnter elements of matrix A:\n");
     for(i=0; i<r1; ++i)
         for(j=0; j<c1; ++j) {
-            printf("-\tEnter element A[%d, %d]: ",i+1,j+1);
-            scanf("%d",&a[i][j]);
+            /* printf("-\tEnter element A[%d, %d]: ",i+1,j+1);
+             * scanf("%d",&a[i][j]); */
             a[i][j] = i+j; // build sample data
         }
 
@@ -138,8 +138,8 @@ int main() {
     printf("\nEnter elements of matrix B:\n");
     for(i=0; i<r2; ++i)
         for(j=0; j<c2; ++j) {
-            printf("-\tEnter element B[%d, %d]: ",i+1,j+1);
-            scanf("%d",&b[i][j]);
+            /* printf("-\tEnter element B[%d, %d]: ",i+1,j+1);
+             * scanf("%d",&b[i][j]); */
             b[i][j] = 10 + i + j;
         }
 

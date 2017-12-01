@@ -13,7 +13,6 @@ typedef struct {
 
 typedef struct {
     unsigned int tag;
-    unsigned int data;
 } line_t;
 
 typedef struct {
