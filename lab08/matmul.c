@@ -38,13 +38,14 @@ void access_cache(int *mp, cache_t *c) {
 /* This function gets called with each "read" reference to memory */
 void mem_read(int *mp, cache_t *c) {
     /* printf("Memory read from location %p\n", mp); */
+    access_cache(mp, c);
     c->stats.reads++;
 }
 
 /* This function gets called with each "write" reference to memory */
 void mem_write(int *mp, cache_t *c) {
-
     /* printf("Memory write to location %p\n", mp); */
+    access_cache(mp, c);
     c->stats.writes++;
 }
 
@@ -92,19 +93,18 @@ int main() {
     printf("Cache size (16 | 256): ");
     scanf("%u", &c.cachesize);
     while (c.cachesize != 16 && c.cachesize != 256) {
-        printf("Invalid cache size\n");
-        printf("Cache size (16 | 256): ");
+        printf("Invalid cache size\nCache size (16 | 256): ");
         scanf("%u", &c.cachesize);
     }
+
     printf("Accociativity (1 | 2 | 4): ");
     scanf("%u", &c.blocksize);
     while (c.blocksize != 1 && c.blocksize != 2 && c.blocksize != 4) {
-        printf("Invalid block size\n");
-        printf("Associativity (1 | 2 | 4): ");
+        printf("Invalid block size\nAssociativity (1 | 2 | 4): ");
         scanf("%u", &c.blocksize);
     }
 
-    printf("Size of pointer is: %d\n\n", sizeof(mp1));
+    printf("\nSize of pointer: %d\n\n", sizeof(mp1));
 
     printf("Enter number of rows first matrix: ");
     scanf("%u", &r1);
@@ -112,33 +112,37 @@ int main() {
     scanf("%u", &c1);
     printf("Enter number of rows for second matrix: ");
     scanf("%u",&r2);
+    while (c1 != r2) {
+        printf("ERROR: Column of first matrix not equal to row of second\n");
+        printf("Enter number of rows first matrix: ");
+        scanf("%u", &r1);
+        printf("Enter number of columns for first matrix: ");
+        scanf("%u", &c1);
+        printf("\n");
+        printf("Enter number of rows for second matrix: ");
+        scanf("%u",&r2);
+    }
     printf("Enter number of columns for second matrix: ");
     scanf("%u", &c2);
 
     /* If column of first matrix in not equal to row of second matrix, asking
      * user to enter the size of matrix again. */
-    while (c1 != r2) {
-        printf("Error! column of first matrix not equal to row of second.\n");
-        printf("Enter rows and column for first matrix: ");
-        scanf("%d%d", &r1, &c1);
-        printf("Enter rows and column for second matrix: ");
-        scanf("%d%d",&r2, &c2);
-    }
+
 
     /* Storing elements of first matrix. */
-    printf("\nEnter elements of matrix 1:\n");
+    printf("\nEnter elements of matrix A:\n");
     for(i=0; i<r1; ++i)
         for(j=0; j<c1; ++j) {
-            printf("Enter elements a%d%d: ",i+1,j+1);
+            printf("\tEnter element A[%d, %d]: ",i+1,j+1);
             scanf("%d",&a[i][j]);
             a[i][j] = i+j; // build sample data
         }
 
 /* Storing elements of second matrix. */
-    printf("\nEnter elements of matrix 2:\n");
+    printf("\nEnter elements of matrix B:\n");
     for(i=0; i<r2; ++i)
         for(j=0; j<c2; ++j) {
-            printf("Enter elements b%d%d: ",i+1,j+1);
+            printf("\tEnter element B[%d, %d]: ",i+1,j+1);
             scanf("%d",&b[i][j]);
             b[i][j] = 10 + i + j;
         }
@@ -151,7 +155,7 @@ int main() {
         for(j=0; j<c2; ++j) {
             printf("%d  ",mult[i][j]);
             if(j==c2-1)
-                printf("\n\n");
+                printf("\n");
         }
 
     return 0;
