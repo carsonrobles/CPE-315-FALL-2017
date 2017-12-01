@@ -7,7 +7,7 @@
 #include "cachesim.h"
 
 #define AMAX 10         /* Maximum (square) array size */
-#define CACHESIM 0      /* Set to 1 if simulating Cache */
+#define CACHESIM 1      /* Set to 1 if simulating Cache */
 
 unsigned int tag_search(block_t *b, unsigned int blocksize, unsigned int tag) {
     int l;
@@ -30,6 +30,7 @@ void access_cache(int *mp, cache_t *c) {
     if ((tag = tag_search(&c->cache[index], c->blocksize, address)) == -1) {
         c->stats.misses++;
         c->cache[index].lines[c->cache[index].next_in].data = *mp;
+        c->cache[index].lines[c->cache[index].next_in].tag = tag;
         c->cache[index].next_in = (c->cache[index].next_in + 1) % c->blocksize;
     } else {
         c->stats.hits++;
@@ -54,7 +55,7 @@ void mem_write(int *mp, cache_t *c) {
  * cross product of a and b, i.e., a x b. */
 static int a[AMAX][AMAX], b[AMAX][AMAX], mult[AMAX][AMAX];
 
-void matmul(r1, c1, c2) {
+void matmul(cache_t *c, r1, c1, c2) {
     int i, j, k;
     int *mp1, *mp2, *mp3;
 
@@ -69,20 +70,19 @@ void matmul(r1, c1, c2) {
         for(j=0; j<c2; ++j)
             for(k=0; k<c1; ++k) {
 
-#if CACHESIM        /* "Hooks" to measure memory references - enabled if CACHESIM  */
-
+                #if CACHESIM        /* "Hooks" to measure memory references - enabled if CACHESIM  */
                 mp1 = &mult[i][j];
-    mp2 = &a[i][k];
-    mp3 = &b[k][j];     
-    mem_read(mp1);
-    mem_read(mp2);
-    mem_read(mp3);
-    mem_write(mp1); 
-#endif
+                mp2 = &a[i][k];
+                mp3 = &b[k][j];     
+                mem_read(mp1, c);
+                mem_read(mp2, c);
+                mem_read(mp3, c);
+                mem_write(mp1, c); 
+                #endif
 
                 mult[i][j]+=a[i][k]*b[k][j];
 
-                }
+            }
 }
 
 int main() {
@@ -119,16 +119,11 @@ int main() {
         scanf("%u", &r1);
         printf("Enter number of columns for first matrix: ");
         scanf("%u", &c1);
-        printf("\n");
         printf("Enter number of rows for second matrix: ");
         scanf("%u",&r2);
     }
     printf("Enter number of columns for second matrix: ");
     scanf("%u", &c2);
-
-    /* If column of first matrix in not equal to row of second matrix, asking
-     * user to enter the size of matrix again. */
-
 
     /* Storing elements of first matrix. */
     printf("\nEnter elements of matrix A:\n");
@@ -148,7 +143,7 @@ int main() {
             b[i][j] = 10 + i + j;
         }
 
-    matmul(r1, c1, c2);        /* Invoke matrix multiply function */ 
+    matmul(&c, r1, c1, c2);        /* Invoke matrix multiply function */ 
 
     /* Displaying the multiplication of two matrix. */
     printf("\nOutput Matrix:\n");
@@ -156,8 +151,13 @@ int main() {
         for(j=0; j<c2; ++j) {
             printf("%d  ",mult[i][j]);
             if(j==c2-1)
-                printf("\n");
+                printf("\n\n");
         }
+
+    printf("Read-write ratio: %u reads / %u writes = %.3f\n", c.stats.reads,\
+            c.stats.writes, (float) c.stats.reads / c.stats.writes);
+    printf("Hit rate: %u hits / %u misses = %.3f\n", c.stats.hits,\
+            c.stats.misses, (float) c.stats.hits / c.stats.misses);
 
     return 0;
 }
