@@ -27,10 +27,10 @@ void access_cache(int *mp, cache_t *c) {
     else    /* otherwise, cache size = 256 */
         index = address & 0xff;
 
-    if ((tag = tag_search(&c->cache[index], c->blocksize, address)) == -1) {
+    if (tag_search(&c->cache[index], c->blocksize, address) == -1) {
         c->stats.misses++;
         c->cache[index].lines[c->cache[index].next_in].data = *mp;
-        c->cache[index].lines[c->cache[index].next_in].tag = tag;
+        c->cache[index].lines[c->cache[index].next_in].tag = address;
         c->cache[index].next_in = (c->cache[index].next_in + 1) % c->blocksize;
     } else {
         c->stats.hits++;
@@ -129,7 +129,7 @@ int main() {
     printf("\nEnter elements of matrix A:\n");
     for(i=0; i<r1; ++i)
         for(j=0; j<c1; ++j) {
-            printf("\tEnter element A[%d, %d]: ",i+1,j+1);
+            printf("-\tEnter element A[%d, %d]: ",i+1,j+1);
             scanf("%d",&a[i][j]);
             a[i][j] = i+j; // build sample data
         }
@@ -138,7 +138,7 @@ int main() {
     printf("\nEnter elements of matrix B:\n");
     for(i=0; i<r2; ++i)
         for(j=0; j<c2; ++j) {
-            printf("\tEnter element B[%d, %d]: ",i+1,j+1);
+            printf("-\tEnter element B[%d, %d]: ",i+1,j+1);
             scanf("%d",&b[i][j]);
             b[i][j] = 10 + i + j;
         }
@@ -156,7 +156,7 @@ int main() {
 
     printf("Read-write ratio: %u reads / %u writes = %.3f\n", c.stats.reads,\
             c.stats.writes, (float) c.stats.reads / c.stats.writes);
-    printf("Hit rate: %u hits / %u misses = %.3f\n", c.stats.hits,\
+    printf("Hit-miss ratio: %u hits / %u misses = %.3f\n", c.stats.hits,\
             c.stats.misses, (float) c.stats.hits / c.stats.misses);
 
     return 0;
